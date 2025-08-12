@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小樱 - 魔卡少女AI ✨</title>
+    
+    <!-- 库洛牌主题图标 -->
+    <link rel="icon" type="image/svg+xml" href="./images/favicon.svg">
+    <link rel="shortcut icon" href="./images/favicon.svg">
+    <link rel="icon" href="./images/favicon.svg">
+    
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- 顶部导航 -->
+        <nav class="navbar">
+            <div class="nav-brand">
+                <div class="brand-icon">
+                    <i class="fas fa-star"></i>
+                </div>
+                <div class="brand-text">
+                    <h1>魔卡少女小樱</h1>
+                    <span class="brand-subtitle">魔卡少女AI ✨</span>
+                </div>
+            </div>
+            <div class="nav-actions">
+                <button class="btn btn-outline" onclick="toggleTheme()">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </nav>
+
+        <!-- 主要内容区域 -->
+        <div class="main-content">
+            <!-- 左侧配置面板 -->
+            <div class="sidebar">
+                <div class="config-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-wand-magic-sparkles"></i> 魔法配置</h3>
+                        <div class="card-decoration"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="apiKey">
+                            <i class="fas fa-key"></i> 魔法钥匙
+                        </label>
+                        <div class="input-wrapper">
+                            <input type="password" id="apiKey" placeholder="sk-xxxxxxxxxxxxxxxxxxxxxxxx">
+                            <button class="toggle-password" onclick="togglePassword()">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="baseUrl">
+                            <i class="fas fa-door-open"></i> 魔法门
+                        </label>
+                        <input type="text" id="baseUrl" value="https://api.deepseek.com" placeholder="API 基础地址">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="model">
+                            <i class="fas fa-cards-blank"></i> 选择库洛牌
+                        </label>
+                        <div class="model-selector">
+                            <select id="model" onchange="window.deepseekChat?.handleModelChange()">
+                                <option value="deepseek-chat">DeepSeek-V3-0324 (聊天魔卡)</option>
+                                <option value="deepseek-reasoner">DeepSeek-R1-0528 (推理魔卡)</option>
+                                <option value="custom">自定义库洛牌 ✨</option>
+                            </select>
+                            <div class="custom-model-input-wrapper" style="display: none;">
+                                <input type="text" id="customModel" placeholder="例如: deepseek-chat, gpt-4, claude-3">
+                                <div class="custom-model-status" id="customModelStatus">
+                                    <i class="fas fa-check-circle status-valid" style="display: none;"></i>
+                                    <i class="fas fa-exclamation-circle status-invalid" style="display: none;"></i>
+                                </div>
+                                <button class="clear-custom-model" onclick="clearCustomModel()" title="清除自定义模型">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="model-info" id="modelInfo">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle"></i> 
+                                <span id="modelDescription">聊天魔卡，擅长日常对话和创意写作</span>
+                            </small>
+                        </div>
+                        <div class="custom-model-help" id="customModelHelp" style="display: none;">
+                            <small class="text-muted">
+                                <i class="fas fa-lightbulb"></i>
+                                <span>支持所有兼容OpenAI API格式的模型，如：gpt-4, claude-3, gemini-pro等</span>
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="temperature">
+                            <i class="fas fa-sparkles"></i> 创造力 (0-2)
+                        </label>
+                        <div class="slider-container">
+                            <input type="range" id="temperature" min="0" max="2" step="0.1" value="0.7">
+                            <span class="slider-value" id="tempValue">0.7</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="maxTokens">
+                            <i class="fas fa-ruler"></i> 魔法长度
+                        </label>
+                        <input type="number" id="maxTokens" value="2000" min="100" max="8000">
+                    </div>
+
+                    <!-- 翻译模式配置 -->
+                    <div class="form-group">
+                        <label for="translationMode">
+                            <i class="fas fa-language"></i> 翻译模式
+                        </label>
+                        <div class="translation-controls" id="translationControls" style="display: none;">
+                            <select id="srcLang" class="lang-select">
+                                <option value="auto">自动检测</option>
+                                <option value="zh">中文</option>
+                                <option value="en">英语</option>
+                                <option value="ja">日语</option>
+                                <option value="ko">韩语</option>
+                                <option value="fr">法语</option>
+                                <option value="de">德语</option>
+                                <option value="es">西班牙语</option>
+                                <option value="ru">俄语</option>
+                            </select>
+                            <div class="lang-arrow">
+                                <i class="fas fa-arrow-right"></i>
+                            </div>
+                            <select id="tgtLang" class="lang-select">
+                                <option value="zh">中文</option>
+                                <option value="en">英语</option>
+                                <option value="ja">日语</option>
+                                <option value="ko">韩语</option>
+                                <option value="fr">法语</option>
+                                <option value="de">德语</option>
+                                <option value="es">西班牙语</option>
+                                <option value="ru">俄语</option>
+                            </select>
+                        </div>
+                        <div class="translation-toggle">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="translationMode">
+                                <span class="toggle-slider"></span>
+                            </label>
+                            <span class="toggle-label">启用翻译模式</span>
+                        </div>
+                        <div class="translation-toggle">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="multiTurnMode">
+                                <span class="toggle-slider"></span>
+                            </label>
+                            <span class="toggle-label">多轮对话模式</span>
+                        </div>
+                    </div>
+                    
+                    <!-- 文件翻译功能 -->
+                    <div class="file-translation-section" id="fileTranslationSection" style="display: none;">
+                        <div class="file-upload-area">
+                            <label for="txtFileInput" class="file-upload-label">
+                                <i class="fas fa-file-upload"></i>
+                                <span>选择TXT文件</span>
+                            </label>
+                            <input type="file" id="txtFileInput" accept=".txt" style="display: none;">
+                            <div class="file-info" id="fileInfo" style="display: none;">
+                                <span class="file-name" id="fileName"></span>
+                                <span class="file-size" id="fileSize"></span>
+                                <button class="btn btn-outline btn-small" onclick="clearFile()">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary btn-full" id="translateFileBtn" style="display: none;">
+                            <i class="fas fa-language"></i> 开始翻译文件
+                        </button>
+                    </div>
+
+                    <button class="btn btn-primary btn-full" id="testConnectionBtn">
+                                                    <i class="fas fa-wand-magic-sparkles"></i> 测试魔法连接
+                    </button>
+                </div>
+
+                <div class="stats-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-book-open"></i> 冒险记录</h3>
+                        <div class="card-decoration"></div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">对话次数</span>
+                        <span class="stat-value" id="chatCount">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">总字符数</span>
+                        <span class="stat-value" id="totalChars">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧聊天区域 -->
+            <div class="chat-area">
+                <div class="chat-header">
+                    <h2><i class="fas fa-comments"></i> 魔法对话</h2>
+                    <div class="chat-actions">
+                        <button class="btn btn-outline" onclick="exportChat()">
+                            <i class="fas fa-download"></i> 保存记录
+                        </button>
+                        <button class="btn btn-outline" id="magicBtn" style="display: none;">
+                            <i class="fas fa-wand-magic-sparkles"></i> 施展魔法
+                        </button>
+                        <button class="btn btn-outline" onclick="clearChat()">
+                            <i class="fas fa-trash"></i> 清空对话
+                        </button>
+                    </div>
+                </div>
+
+                <div class="chat-messages" id="chatMessages">
+                    <div class="welcome-message">
+                        <div class="welcome-icon">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <h3>喵~ 欢迎来到 魔卡少女小樱 的魔法世界！✨</h3>
+                        <p>知世，请在上方配置你的魔法钥匙，然后和可爱的小樱一起开始神奇的对话冒险吧~ 🌟</p>
+                        <div class="feature-list">
+                            <div class="feature-item">
+                                <i class="fas fa-cards-blank"></i>
+                                <span>多种库洛牌可选 ✨</span>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-sliders"></i>
+                                <span>智能参数调节 🌈</span>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-wand-magic-sparkles"></i>
+                                <span>实时魔法体验 🎀</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 文件翻译进度区域 -->
+                <div class="file-translation-progress" id="fileTranslationProgress" style="display: none;">
+                    <div class="progress-header">
+                        <h4><i class="fas fa-language"></i> 文件翻译进度</h4>
+                        <button class="btn btn-outline btn-small" onclick="cancelFileTranslation()">
+                            <i class="fas fa-times"></i> 取消
+                        </button>
+                    </div>
+                    <div class="progress-content">
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" id="translationProgressBar">
+                                <div class="progress-fill" id="translationProgressFill"></div>
+                            </div>
+                            <div class="progress-text" id="translationProgressText">0%</div>
+                        </div>
+                        <div class="progress-details">
+                            <div class="progress-item">
+                                <span class="progress-label">已翻译:</span>
+                                <span class="progress-value" id="translatedLines">0</span>
+                                <span class="progress-label">/</span>
+                                <span class="progress-value" id="totalLines">0</span>
+                                <span class="progress-label">行</span>
+                            </div>
+                            <div class="progress-item">
+                                <span class="progress-label">当前状态:</span>
+                                <span class="progress-value" id="currentStatus">准备中...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chat-input-area">
+                    <div class="input-container">
+                        <textarea 
+                            id="userInput" 
+                            placeholder="知世，输入您的问题，按 Enter 发送魔卡，Shift+Enter 换行..."
+                            rows="3"
+                        ></textarea>
+                        <div class="input-actions">
+                            <button class="btn btn-primary" id="sendBtn">
+                                <i class="fas fa-paper-plane"></i> 发送魔卡
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 二次元主题装饰区域 -->
+                <div class="anime-decoration-area">
+                    <div class="decoration-card">
+                        <div class="decoration-header">
+                            <i class="fas fa-star"></i>
+                            <h4>魔卡少女小贴士 ✨</h4>
+                        </div>
+                        <div class="tip-content">
+                            <p>💫 今天也要元气满满地聊天哦~</p>
+                            <p>🌟 知世，记得经常和小樱互动，她会越来越可爱的！</p>
+                            <p>🎀 魔法世界的大门永远为你敞开~</p>
+                        </div>
+                    </div>
+                    
+                    <div class="decoration-card">
+                        <div class="decoration-header">
+                            <i class="fas fa-heart"></i>
+                            <h4>今日魔卡心情 🌈</h4>
+                        </div>
+                        <div class="mood-content">
+                            <div class="mood-item" data-quick-input="小樱，今天我的心情很好呢~ 想要和你分享一些开心的事情 ✨">
+                                <span class="mood-emoji">😊</span>
+                                <span class="mood-text">开心心情</span>
+                            </div>
+                            <div class="mood-item" data-quick-input="小樱，今天感觉特别有灵感呢~ 想要为你创作一些美好的东西 🌟">
+                                <span class="mood-emoji">✨</span>
+                                <span class="mood-text">有灵感</span>
+                            </div>
+                            <div class="mood-item" data-quick-input="小樱，今天想要为你做一些有趣的事情呢~ 来一起创造美好的回忆吧 🎭">
+                                <span class="mood-emoji">🎭</span>
+                                <span class="mood-text">想要为你做</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="decoration-card">
+                        <div class="decoration-header">
+                            <i class="fas fa-wand-magic-sparkles"></i>
+                            <h4>魔法咒语集 🎪</h4>
+                        </div>
+                        <div class="spell-content">
+                            <div class="spell-item" data-quick-input="小樱，你好呀！今天要和你聊些什么呢？✨">
+                                <span class="spell-name">"小樱，你好~"</span>
+                                <span class="spell-desc">温柔打招呼</span>
+                            </div>
+                            <div class="spell-item" data-quick-input="小樱，好神奇呢！能告诉我更多关于这个的事情吗？🌟">
+                                <span class="spell-name">"好神奇呢~"</span>
+                                <span class="spell-desc">表达好奇</span>
+                            </div>
+                            <div class="spell-item" data-quick-input="小樱，你真是太棒了！我为你感到骄傲呢~ 🎀">
+                                <span class="spell-name">"太棒了~"</span>
+                                <span class="spell-desc">温柔赞美</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 状态栏 -->
+        <div class="status-bar">
+            <div class="status-left">
+                <span id="statusText" class="status-text">
+                    <i class="fas fa-circle status-dot ready"></i> 准备就绪
+                </span>
+            </div>
+            <div class="status-right">
+                <span id="tokenCount" class="token-info"></span>
+                
+                <span class="version"><a href="https://space.bilibili.com/185590732">v3.2.9beta</a></span>
+            </div>
+        </div>
+    </div>
+
+
+
+    <script src="script.js"></script>
+</body>
+</html>
