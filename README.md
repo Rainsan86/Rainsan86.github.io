@@ -9,7 +9,7 @@
 *"知世，让我们一起创造美好的回忆吧~"* 🌟
 
 [![在线体验](https://img.shields.io/badge/在线体验-立即开始-green?style=for-the-badge&logo=play)](https://Rainsan86.github.io)
-[![问题反馈](https://img.shields.io/badge/问题反馈-GitHub_Issues-orange?style=for-the-badge&logo=github)](https://github.com/rainsan86.github.io/issues)
+[![问题反馈](https://img.shields.io/badge/问题反馈-GitHub_Issues-orange?style=for-the-badge&logo=github)](https://github.com/Rainsan86/Rainsan86.github.io/issues)
 
 </div>
 
@@ -235,4 +235,5 @@ cd https://github.com/Rainsan86/Rainsan86.github.io
 [![Fork](https://img.shields.io/badge/Fork-🍴-green?style=social)](https://github.com/Rainsan86/Rainsan86.github.io/forks)
 
 </div>
+
 
