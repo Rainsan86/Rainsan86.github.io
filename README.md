@@ -8,8 +8,8 @@
 
 *"知世，让我们一起创造美好的回忆吧~"* 🌟
 
-[![在线体验](https://img.shields.io/badge/在线体验-立即开始-green?style=for-the-badge&logo=play)](https://space.bilibili.com/185590732)
-[![问题反馈](https://img.shields.io/badge/问题反馈-GitHub_Issues-orange?style=for-the-badge&logo=github)](https://github.com/your-repo/issues)
+[![在线体验](https://img.shields.io/badge/在线体验-立即开始-green?style=for-the-badge&logo=play)](https://Rainsan86.github.io)
+[![问题反馈](https://img.shields.io/badge/问题反馈-GitHub_Issues-orange?style=for-the-badge&logo=github)](https://github.com/rainsan86.github.io/issues)
 
 </div>
 
@@ -72,8 +72,8 @@
 
 1. **克隆项目**
 ```bash
-git clone https://github.com/your-username/magic-girl-sakura.git
-cd magic-girl-sakura
+git clone https://github.com/Rainsan86/https://github.com/Rainsan86/Rainsan86.github.io.git
+cd https://github.com/Rainsan86/Rainsan86.github.io
 ```
 
 2. **配置API密钥**
@@ -219,10 +219,10 @@ cd magic-girl-sakura
 
 ## 🌸 联系我们
 
-- **项目主页**: [GitHub Repository](https://github.com/your-username/magic-girl-sakura)
+- **项目主页**: [GitHub Repository](https://github.com/Rainsan86/https://github.com/Rainsan86/Rainsan86.github.io)
 - **在线体验**: [Bilibili Space](https://space.bilibili.com/185590732)
-- **问题反馈**: [GitHub Issues](https://github.com/your-username/magic-girl-sakura/issues)
-- **讨论交流**: [GitHub Discussions](https://github.com/your-username/magic-girl-sakura/discussions)
+- **问题反馈**: [GitHub Issues](https://github.com/Rainsan86/https://github.com/Rainsan86/Rainsan86.github.io/issues)
+- **讨论交流**: [GitHub Discussions](https://github.com/Rainsan86/https://github.com/Rainsan86/Rainsan86.github.io/discussions)
 
 ---
 
@@ -232,7 +232,7 @@ cd magic-girl-sakura
 
 **魔卡少女小樱 v3.2.9beta** - 让魔法与AI相遇 ✨
 
-[![Star](https://img.shields.io/badge/Star-⭐-yellow?style=social)](https://github.com/your-username/magic-girl-sakura)
-[![Fork](https://img.shields.io/badge/Fork-🍴-green?style=social)](https://github.com/your-username/magic-girl-sakura)
+[![Star](https://img.shields.io/badge/Star-⭐-yellow?style=social)](https://github.com/Rainsan86/https://github.com/Rainsan86/Rainsan86.github.io)
+[![Fork](https://img.shields.io/badge/Fork-🍴-green?style=social)](https://github.com/Rainsan86/https://github.com/Rainsan86/Rainsan86.github.io)
 
 </div>
