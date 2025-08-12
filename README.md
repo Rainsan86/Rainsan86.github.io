@@ -92,9 +92,9 @@ cd https://github.com/Rainsan86/Rainsan86.github.io
 |--------|------|--------|
 | 魔法钥匙 | AI服务API密钥 | 需要配置 |
 | 魔法门 | API基础地址 | https://api.deepseek.com |
-| 库洛牌 | AI模型选择 | DeepSeek-V3-0324 |
-| 创造力 | 回复创意程度 | 0.7 |
-| 魔法长度 | 最大回复长度 | 2000 |
+| 库洛牌 | AI模型选择 | DeepSeek-V3-0324 等|
+| 创造力 | 回复创意程度 | 2|
+| 魔法长度 | 最大回复长度 | 8000 |
 
 ---
 
