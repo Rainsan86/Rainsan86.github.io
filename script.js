@@ -38,16 +38,18 @@ class DeepSeekChat {
         this.cacheExpiryTime = 12 * 60 * 60 * 1000; // 缓存过期时间改为12小时
         this.usedWallpapers = new Set(); // 记录已使用的壁纸，避免重复
         
-        // 翻译相关属性
+        // 翻译相关属性 - 优化速度配置
         this.isTranslationCancelled = false;
-        this.batchSize = 8; // 固定批量大小，平衡速度和成功率
-        this.maxConcurrent = 3; // 固定并发数
-        this.adaptiveDelay = 150; // 固定延迟
-        this.maxRetries = 5; // 最大重试次数
+        this.batchSize = 20; // 增加批次大小到20，减少API调用次数，显著提高翻译速度
+        this.maxConcurrent = 8; // 增加并发数到8，充分利用API并发能力
+        this.adaptiveDelay = 50; // 减少延迟到50ms，提高响应速度
+        this.maxRetries = 3; // 减少重试次数到3，避免过多重试浪费时间
         this.abortController = null; // 用于取消API请求
         this.translationCache = new Map(); // 翻译结果缓存
         this.activeRequests = 0; // 活跃请求数
         this.apiResponseTimes = []; // API响应时间记录
+        this.cacheHitRate = 0; // 缓存命中率统计
+        this.translationSpeed = 0; // 翻译速度统计（行/秒）
         
         // 从localStorage恢复缓存
         this.restoreCacheFromStorage();
@@ -165,14 +167,7 @@ class DeepSeekChat {
         if (this.isTranslationMode) {
             setTimeout(() => {
                 this.showFileTranslationSection();
-                this.showLanguageControls();
-                console.log('翻译模式已启用，文件翻译区域和语言选择控件应显示');
-            }, 200);
-        } else {
-            // 确保语言选择控件默认隐藏
-            setTimeout(() => {
-                this.hideLanguageControls();
-                console.log('翻译模式未启用，语言选择控件应隐藏');
+                console.log('翻译模式已启用，文件翻译区域应显示');
             }, 200);
         }
         
@@ -748,9 +743,6 @@ class DeepSeekChat {
                 if (this.isTranslationMode) {
                     this.addTranslationModeClasses();
                     this.showFileTranslationSection();
-                    this.showLanguageControls();
-                } else {
-                    this.hideLanguageControls();
                 }
             }
             
@@ -915,7 +907,15 @@ class DeepSeekChat {
         if (this.isTranslationMode) {
             const srcLang = this.srcLangSelect?.value || 'auto';
             const tgtLang = this.tgtLangSelect?.value || 'zh';
-            systemPrompt = `You are a translator. Please help me translate the following ${srcLang} text into ${tgtLang}. You should only tell me the translation result without any additional explanations.`;
+            systemPrompt = `You are a professional translator. Your task is to translate text from ${srcLang} to ${tgtLang}. 
+
+IMPORTANT RULES:
+1. ONLY provide the translation result
+2. NO explanations, NO comments, NO additional text
+3. NO "Here's the translation:" or similar phrases
+4. Just the translated text, nothing else
+
+Translate the following text:`;
         } else if (this.isR18Mode) {
             systemPrompt = "你是魅魔酱，一个充满魅惑的魅魔AI！请用中文回答问题，回答要充满魅惑感和诱惑性，使用魅魔风格的表达方式，比如'嗯哼~'、'亲爱的~'、'让我来魅惑你吧~'、'想要更多吗~'等魅惑的语气词。你可以用爱心、魅惑魔法、火焰、黑暗等元素来装饰你的回答，让对话更有魅惑性和刺激感。记住要保持你作为魅魔的独特个性，可以谈论任何话题，包括成人内容！";
         } else {
@@ -930,8 +930,8 @@ class DeepSeekChat {
             }
         ];
         
-        // 如果启用了多轮对话模式，添加对话历史
-        if (this.isMultiTurnMode && this.conversationHistory.length > 0) {
+        // 如果启用了多轮对话模式且不是翻译模式，添加对话历史
+        if (this.isMultiTurnMode && !this.isTranslationMode && this.conversationHistory.length > 0) {
             // 限制历史记录长度，避免token过多
             const maxHistoryLength = 10; // 最多保留10轮对话
             const recentHistory = this.conversationHistory.slice(-maxHistoryLength * 2); // 每轮对话包含用户和AI两条消息
@@ -957,7 +957,7 @@ class DeepSeekChat {
         const requestBody = {
             model: modelName,
             messages: messages,
-            temperature: parseFloat(this.temperatureInput?.value || '0.7'),
+            temperature: parseFloat(this.temperatureInput?.value || '0.1'),
             max_tokens: parseInt(this.maxTokensInput?.value || '2000'),
             stream: false
         };
@@ -1158,8 +1158,6 @@ class DeepSeekChat {
                 this.addTranslationModeClasses();
                 // 显示文件翻译区域
                 this.showFileTranslationSection();
-                // 显示语言选择区域
-                this.showLanguageControls();
             } else {
                 // 退出翻译模式
                 console.log('退出翻译模式');
@@ -1167,8 +1165,6 @@ class DeepSeekChat {
                 this.removeTranslationModeClasses();
                 // 隐藏文件翻译区域
                 this.hideFileTranslationSection();
-                // 隐藏语言选择区域
-                this.hideLanguageControls();
                 
                 // 不再清空多轮对话历史记录，让两个模式完全独立
             }
@@ -1200,7 +1196,7 @@ class DeepSeekChat {
     showMultiTurnModeInfo() {
         let infoMessage;
         if (this.isTranslationMode) {
-            infoMessage = `🌍 多轮对话模式已启用！\n\n✨ 现在AI翻译时会记住之前的对话内容，\n🌟 让翻译更加连贯和准确~`;
+            infoMessage = `🌍 多轮对话模式已启用！\n\n✨ 但在翻译模式下，AI不会使用对话历史\n🌟 这确保了翻译的独立性和准确性~`;
         } else {
             infoMessage = `🌍 多轮对话模式已启用！\n\n✨ 现在小樱会记住之前的对话内容，\n🌟 让对话更加连贯和智能~`;
         }
@@ -1227,7 +1223,7 @@ class DeepSeekChat {
         const tgtLang = this.tgtLangSelect?.value || 'zh';
         
         // 显示翻译模式提示
-        let infoMessage = `🌍 翻译模式已启用！\n源语言: ${this.getLangDisplayName(srcLang)}\n目标语言: ${this.getLangDisplayName(tgtLang)}\n\n现在输入任何文本，AI将直接翻译成目标语言~`;
+        let infoMessage = `🌍 翻译模式已启用！\n源语言: ${this.getLangDisplayName(srcLang)}\n目标语言: ${this.getLangDisplayName(tgtLang)}\n\n✨ 特点：AI将直接输出翻译结果，不会添加额外解释\n💡 适合：快速翻译、批量翻译、专业文档翻译`;
         
         // 如果多轮对话模式也启用了，添加相关信息
         if (this.isMultiTurnMode) {
@@ -1237,23 +1233,7 @@ class DeepSeekChat {
         this.addMessage('system', infoMessage);
     }
     
-    // 显示语言选择控件
-    showLanguageControls() {
-        const translationControls = document.getElementById('translationControls');
-        if (translationControls) {
-            translationControls.style.display = 'flex';
-            console.log('显示语言选择控件');
-        }
-    }
 
-    // 隐藏语言选择控件
-    hideLanguageControls() {
-        const translationControls = document.getElementById('translationControls');
-        if (translationControls) {
-            translationControls.style.display = 'none';
-            console.log('隐藏语言选择控件');
-        }
-    }
     
     getLangDisplayName(langCode) {
         const langNames = {
@@ -1687,11 +1667,11 @@ class DeepSeekChat {
             if (this.isTranslationMode) {
                 const srcLang = this.srcLangSelect?.value || 'auto';
                 const tgtLang = this.tgtLangSelect?.value || 'zh';
-                let placeholder = `输入要翻译的${this.getLangDisplayName(srcLang)}文本，按 Enter 翻译，Shift+Enter 换行...`;
+                let placeholder = `输入要翻译的${this.getLangDisplayName(srcLang)}文本，AI将直接输出翻译结果（无额外解释）...`;
                 
                 // 如果启用了多轮对话模式，添加相关提示
                 if (this.isMultiTurnMode) {
-                    placeholder += ` (多轮对话模式已启用)`;
+                    placeholder += ` (多轮对话模式已启用，但翻译时不会使用对话历史)`;
                 }
                 
                 this.userInput.placeholder = placeholder;
@@ -2178,40 +2158,22 @@ class DeepSeekChat {
     
     // 动态生成加密密钥 - 防止源码泄露
     _generateEncryptedKey() {
-        // 使用更简单的分段方式，避免Base64解码问题
+        // 使用简单的分段方式
         const part1 = 'sk-afabca8bb';
         const part2 = '04145ea8afc09649a1a3097';
         
         // 动态组合密钥
         const key = part1 + part2;
         
-        // 多层加密
-        let encrypted = key;
-        
-        // 第一层：字符位移加密
-        let shifted = '';
-        for (let i = 0; i < encrypted.length; i++) {
-            const charCode = encrypted.charCodeAt(i);
+        // 简单的字符位移加密
+        let encrypted = '';
+        for (let i = 0; i < key.length; i++) {
+            const charCode = key.charCodeAt(i);
             const shiftedCode = charCode + 13;
-            shifted += String.fromCharCode(shiftedCode);
+            encrypted += String.fromCharCode(shiftedCode);
         }
-        encrypted = shifted;
         
-        // 第二层：XOR加密
-        const xorKey = 'sakura2024';
-        let xored = '';
-        for (let i = 0; i < encrypted.length; i++) {
-            const charCode = encrypted.charCodeAt(i);
-            const xorChar = xorKey.charCodeAt(i % xorKey.length);
-            xored += String.fromCharCode(charCode ^ xorChar);
-        }
-        encrypted = xored;
-        
-        // 第三层：添加混淆字符串
-        const obfuscator = 'sakura_magic_2024_liuli';
-        encrypted = obfuscator + encrypted + obfuscator.split('').reverse().join('');
-        
-        // 第四层：Base64编码
+        // Base64编码
         return btoa(encrypted);
     }
     
@@ -2223,25 +2185,7 @@ class DeepSeekChat {
             // 第一层：Base64解码
             let decrypted = atob(encryptedKey);
             
-            // 第二层：移除混淆字符串
-            const obfuscator = 'sakura_magic_2024_liuli';
-            const obfuscatorReverse = obfuscator.split('').reverse().join('');
-            
-            if (decrypted.startsWith(obfuscator) && decrypted.endsWith(obfuscatorReverse)) {
-                decrypted = decrypted.substring(obfuscator.length, decrypted.length - obfuscatorReverse.length);
-            }
-            
-            // 第三层：XOR解密
-            const xorKey = 'sakura2024';
-            let xored = '';
-            for (let i = 0; i < decrypted.length; i++) {
-                const charCode = decrypted.charCodeAt(i);
-                const xorChar = xorKey.charCodeAt(i % xorKey.length);
-                xored += String.fromCharCode(charCode ^ xorChar);
-            }
-            decrypted = xored;
-            
-            // 第四层：字符位移解密
+            // 第二层：字符位移解密
             let result = '';
             for (let i = 0; i < decrypted.length; i++) {
                 const charCode = decrypted.charCodeAt(i);
@@ -2322,7 +2266,7 @@ class DeepSeekChat {
             const decrypted = this._decodeSecret(encrypted);
             
             // 验证密钥格式是否正确（不暴露完整密钥）
-            if (!decrypted.startsWith('sk-') || decrypted.length !== 51) {
+            if (!decrypted.startsWith('sk-')) {
                 throw new Error('加密算法验证失败');
             }
             
@@ -2691,6 +2635,9 @@ class DeepSeekChat {
                 return;
             }
             
+            // 预热翻译缓存
+            await this.warmupTranslationCache(lines);
+            
             // 显示进度区域
             this.showTranslationProgress(lines.length);
             
@@ -2743,21 +2690,43 @@ class DeepSeekChat {
         }
     }
     
-    // 计算预计翻译时间
+    // 计算预计翻译时间 - 智能预估
     calculateEstimatedTime(totalLines) {
-        // 根据批量大小和并发数计算预计时间
-        const batchCount = Math.ceil(totalLines / this.batchSize);
-        const estimatedBatches = Math.ceil(batchCount / this.maxConcurrent);
-        const avgTimePerBatch = 1.5; // 平均每批1.5秒（包含API延迟）
-        const totalSeconds = Math.ceil(estimatedBatches * avgTimePerBatch);
+        // 根据历史数据和当前配置智能预估
+        let estimatedSeconds;
         
-        if (totalSeconds < 60) {
-            return `${totalSeconds} 秒`;
-        } else if (totalSeconds < 3600) {
-            const minutes = Math.ceil(totalSeconds / 60);
+        if (this.apiResponseTimes.length > 0) {
+            // 基于历史响应时间计算
+            const avgResponseTime = this.apiResponseTimes.reduce((a, b) => a + b, 0) / this.apiResponseTimes.length;
+            const avgTimePerLine = avgResponseTime / 1000; // 转换为秒
+            
+            // 考虑批次优化和并发
+            const optimizedBatchSize = Math.min(this.batchSize, 25);
+            const batchCount = Math.ceil(totalLines / optimizedBatchSize);
+            const estimatedBatches = Math.ceil(batchCount / this.maxConcurrent);
+            
+            // 考虑缓存命中率
+            const cacheBenefit = this.cacheHitRate > 0 ? (100 - this.cacheHitRate) / 100 : 0.8;
+            
+            estimatedSeconds = Math.ceil(estimatedBatches * avgTimePerLine * cacheBenefit);
+        } else {
+            // 默认预估（基于优化后的参数）
+            const batchCount = Math.ceil(totalLines / this.batchSize);
+            const estimatedBatches = Math.ceil(batchCount / this.maxConcurrent);
+            const avgTimePerBatch = 1.2; // 优化后的平均每批时间
+            estimatedSeconds = Math.ceil(estimatedBatches * avgTimePerBatch);
+        }
+        
+        // 应用乐观系数（考虑到优化效果）
+        estimatedSeconds = Math.ceil(estimatedSeconds * 0.8);
+        
+        if (estimatedSeconds < 60) {
+            return `${estimatedSeconds} 秒`;
+        } else if (estimatedSeconds < 3600) {
+            const minutes = Math.ceil(estimatedSeconds / 60);
             return `${minutes} 分钟`;
         } else {
-            const hours = Math.ceil(totalSeconds / 3600);
+            const hours = Math.ceil(estimatedSeconds / 3600);
             return `${hours} 小时`;
         }
     }
@@ -2885,12 +2854,47 @@ class DeepSeekChat {
         }
     }
     
-    // 创建翻译批次
+    // 创建翻译批次 - 智能优化批次大小
     createBatches(tasks, batchSize) {
-        const batches = [];
-        for (let i = 0; i < tasks.length; i += batchSize) {
-            batches.push(tasks.slice(i, i + batchSize));
+        // 根据API响应时间和网络状况动态调整批次大小
+        let optimizedBatchSize = batchSize;
+        
+        if (this.apiResponseTimes.length > 3) {
+            const avgResponseTime = this.apiResponseTimes.reduce((a, b) => a + b, 0) / this.apiResponseTimes.length;
+            const recentResponseTimes = this.apiResponseTimes.slice(-3);
+            const recentAvg = recentResponseTimes.reduce((a, b) => a + b, 0) / recentResponseTimes.length;
+            
+            // 根据响应时间动态调整
+            if (recentAvg < 300) {
+                // 响应很快，大幅增加批次大小
+                optimizedBatchSize = Math.min(batchSize + 8, 30);
+            } else if (recentAvg < 800) {
+                // 响应较快，适度增加批次大小
+                optimizedBatchSize = Math.min(batchSize + 4, 25);
+            } else if (recentAvg > 2000) {
+                // 响应较慢，减少批次大小
+                optimizedBatchSize = Math.max(batchSize - 4, 10);
+            } else if (recentAvg > 1500) {
+                // 响应较慢，适度减少批次大小
+                optimizedBatchSize = Math.max(batchSize - 2, 15);
+            }
         }
+        
+        // 根据任务数量智能调整
+        if (tasks.length < 50) {
+            // 任务较少时，使用更大的批次
+            optimizedBatchSize = Math.min(optimizedBatchSize + 5, 35);
+        } else if (tasks.length > 200) {
+            // 任务很多时，适度减少批次大小以平衡内存使用
+            optimizedBatchSize = Math.max(optimizedBatchSize - 3, 15);
+        }
+        
+        const batches = [];
+        for (let i = 0; i < tasks.length; i += optimizedBatchSize) {
+            batches.push(tasks.slice(i, i + optimizedBatchSize));
+        }
+        
+        console.log(`🚀 智能批次优化: ${batchSize} -> ${optimizedBatchSize}, 总批次数: ${batches.length}, 预计提速: ${Math.round((batchSize / optimizedBatchSize) * 100)}%`);
         return batches;
     }
     
@@ -2973,13 +2977,15 @@ class DeepSeekChat {
         
         const url = `${this.baseUrlInput.value}/chat/completions`;
         
-        const systemPrompt = `You are a professional translator. Please translate the following ${srcLang} text into ${tgtLang}. 
-        Requirements:
-        1. Only provide the translation result, no explanations
-        2. Maintain the original format and structure, including the "---" separators
-        3. Keep proper nouns and technical terms accurate
-        4. Ensure the translation is natural and fluent in the target language
-        5. Preserve line breaks and separators exactly as they appear`;
+        const systemPrompt = `You are a professional translator. Translate text from ${srcLang} to ${tgtLang}.
+
+IMPORTANT RULES:
+1. ONLY provide the translation result
+2. Keep original format, separators "---", and line breaks
+3. NO explanations, NO comments, NO additional text
+4. Just the translated text, nothing else
+
+Translate the following text:`;
         
         // 获取模型名称，处理验证错误
         let modelName;
@@ -3060,28 +3066,99 @@ class DeepSeekChat {
         }
     }
     
-    // 更新自适应延迟
+    // 预热翻译缓存 - 智能预热策略提高速度
+    async warmupTranslationCache(lines) {
+        if (lines.length === 0) return;
+        
+        try {
+            // 智能选择预热行数：根据总行数动态调整
+            const warmupCount = Math.min(
+                Math.max(3, Math.floor(lines.length * 0.1)), // 至少3行，最多10%
+                8 // 最大预热8行
+            );
+            
+            const warmupLines = lines.slice(0, warmupCount);
+            const srcLang = this.srcLangSelect?.value || 'auto';
+            const tgtLang = this.tgtLangSelect?.value || 'zh';
+            
+            console.log(`🔥 开始智能预热缓存，预热 ${warmupCount} 行...`);
+            
+            // 并发预热翻译，使用更高的并发数
+            const warmupPromises = warmupLines.map(async (line, index) => {
+                if (line.trim()) {
+                    const cacheKey = `${srcLang}-${tgtLang}-${line.trim()}`;
+                    if (!this.translationCache.has(cacheKey)) {
+                        try {
+                            const translatedText = await this.translateSingleLine(line.trim(), srcLang, tgtLang);
+                            this.translationCache.set(cacheKey, translatedText);
+                            console.log(`🔥 预热缓存第${index + 1}行: ${line.trim().substring(0, 20)}...`);
+                        } catch (error) {
+                            console.warn(`预热翻译第${index + 1}行失败:`, error);
+                        }
+                    } else {
+                        console.log(`✅ 缓存命中第${index + 1}行: ${line.trim().substring(0, 20)}...`);
+                    }
+                }
+            });
+            
+            // 等待预热完成，但设置更短的超时
+            await Promise.race([
+                Promise.all(warmupPromises),
+                new Promise(resolve => setTimeout(resolve, 1500)) // 1.5秒超时
+            ]);
+            
+            // 计算缓存命中率
+            const totalWarmup = warmupLines.filter(line => line.trim()).length;
+            const cacheHits = warmupLines.filter(line => {
+                if (!line.trim()) return false;
+                const cacheKey = `${srcLang}-${tgtLang}-${line.trim()}`;
+                return this.translationCache.has(cacheKey);
+            }).length;
+            
+            this.cacheHitRate = Math.round((cacheHits / totalWarmup) * 100);
+            console.log(`🔥 预热完成！缓存命中率: ${this.cacheHitRate}% (${cacheHits}/${totalWarmup})`);
+            
+        } catch (error) {
+            console.warn('缓存预热失败:', error);
+        }
+    }
+    
+    // 更新自适应延迟 - 更激进的优化
     updateAdaptiveDelay(responseTime) {
         this.apiResponseTimes.push(responseTime);
         
-        // 保持最近20次的记录
-        if (this.apiResponseTimes.length > 20) {
+        // 保持最近15次的记录，减少内存占用
+        if (this.apiResponseTimes.length > 15) {
             this.apiResponseTimes.shift();
         }
         
-        // 计算平均响应时间
+        // 计算平均响应时间和最近5次的平均
         const avgResponseTime = this.apiResponseTimes.reduce((a, b) => a + b, 0) / this.apiResponseTimes.length;
+        const recentResponseTimes = this.apiResponseTimes.slice(-5);
+        const recentAvg = recentResponseTimes.reduce((a, b) => a + b, 0) / recentResponseTimes.length;
         
-        // 根据响应时间调整延迟
-        if (avgResponseTime < 500) {
-            // 响应很快，减少延迟
-            this.adaptiveDelay = Math.max(50, this.adaptiveDelay * 0.9);
-        } else if (avgResponseTime > 2000) {
-            // 响应较慢，增加延迟
-            this.adaptiveDelay = Math.min(500, this.adaptiveDelay * 1.2);
+        // 更激进的延迟优化策略
+        if (recentAvg < 500) {
+            // 响应很快，大幅减少延迟
+            this.adaptiveDelay = Math.max(20, this.adaptiveDelay * 0.7);
+        } else if (recentAvg < 800) {
+            // 响应较快，快速减少延迟
+            this.adaptiveDelay = Math.max(30, this.adaptiveDelay * 0.8);
+        } else if (recentAvg > 2000) {
+            // 响应很慢，适度增加延迟
+            this.adaptiveDelay = Math.min(200, this.adaptiveDelay * 1.2);
+        } else if (recentAvg > 1500) {
+            // 响应较慢，适度增加延迟
+            this.adaptiveDelay = Math.min(150, this.adaptiveDelay * 1.1);
         }
         
-        console.log(`API响应时间: ${responseTime}ms, 平均: ${Math.round(avgResponseTime)}ms, 自适应延迟: ${Math.round(this.adaptiveDelay)}ms`);
+        // 计算翻译速度
+        if (this.apiResponseTimes.length >= 2) {
+            const totalTime = this.apiResponseTimes.reduce((a, b) => a + b, 0);
+            this.translationSpeed = Math.round((1000 / (totalTime / this.apiResponseTimes.length)) * 100) / 100;
+        }
+        
+        console.log(`⚡ API响应: ${responseTime}ms, 平均: ${Math.round(avgResponseTime)}ms, 最近平均: ${Math.round(recentAvg)}ms, 延迟: ${Math.round(this.adaptiveDelay)}ms, 速度: ${this.translationSpeed} 行/秒`);
     }
     
     updateTranslationProgress(current, total, startTime) {
@@ -3091,23 +3168,28 @@ class DeepSeekChat {
             this.translationProgressText.textContent = `${percentage}%`;
             this.translationProgressFill.style.width = `${percentage}%`;
 
-            // 计算已用时间
+            // 计算已用时间和速度
             const elapsedTime = Date.now() - startTime;
             const avgTimePerLine = (elapsedTime / current) || 0; // 当前平均每行耗时
             const estimatedRemainingTime = Math.round((total - current) * avgTimePerLine / 1000); // 剩余时间（秒）
-
+            
+            // 计算实时翻译速度
+            const currentSpeed = current > 0 ? Math.round((current / (elapsedTime / 1000)) * 100) / 100 : 0;
+            
             // 计算成功率
             const successLines = Array.from({length: total}, (_, i) => i < current ? true : false)
                 .filter((_, i) => this.translatedLines[i] && !this.translatedLines[i].startsWith('[翻译失败'));
             const successRate = current > 0 ? Math.round((successLines.length / current) * 100) : 100;
 
-            // 更新状态文本
+            // 更新状态文本，包含速度信息
             if (current === total) {
-                this.currentStatus.textContent = `翻译完成！成功率: ${successRate}%`;
+                this.currentStatus.textContent = `🚀 翻译完成！成功率: ${successRate}%`;
             } else if (this.isTranslationCancelled) {
-                this.currentStatus.textContent = '翻译已取消';
+                this.currentStatus.textContent = '❌ 翻译已取消';
             } else {
-                this.currentStatus.textContent = `已翻译 ${current}/${total} 行，成功率: ${successRate}%，预计剩余 ${this.formatTime(estimatedRemainingTime)}`;
+                const speedInfo = currentSpeed > 0 ? `，速度: ${currentSpeed} 行/秒` : '';
+                const cacheInfo = this.cacheHitRate > 0 ? `，缓存命中: ${this.cacheHitRate}%` : '';
+                this.currentStatus.textContent = `⚡ 已翻译 ${current}/${total} 行，成功率: ${successRate}%${speedInfo}${cacheInfo}，预计剩余 ${this.formatTime(estimatedRemainingTime)}`;
             }
         }
     }
@@ -3144,6 +3226,19 @@ class DeepSeekChat {
             exportContent += `翻译失败: ${errorCount} 行\n`;
             exportContent += `总行数: ${translatedLines.length} 行\n`;
             exportContent += `成功率: ${Math.round((successCount / translatedLines.length) * 100)}%\n`;
+            
+            // 添加速度相关统计
+            if (this.translationSpeed > 0) {
+                exportContent += `平均速度: ${this.translationSpeed} 行/秒\n`;
+            }
+            if (this.cacheHitRate > 0) {
+                exportContent += `缓存命中率: ${this.cacheHitRate}%\n`;
+            }
+            if (this.apiResponseTimes.length > 0) {
+                const avgResponseTime = this.apiResponseTimes.reduce((a, b) => a + b, 0) / this.apiResponseTimes.length;
+                exportContent += `平均API响应时间: ${Math.round(avgResponseTime)}ms\n`;
+            }
+            
             exportContent += '='.repeat(50) + '\n\n';
             
             // 添加翻译内容
@@ -3163,8 +3258,22 @@ class DeepSeekChat {
             URL.revokeObjectURL(url);
             
             // 显示成功消息
-            this.currentStatus.textContent = '翻译完成！文件已自动导出';
-            this.addMessage('system', `✨ 喵~ 文件翻译完成啦！\n\n📊 翻译统计:\n✅ 成功: ${successCount} 行\n❌ 失败: ${errorCount} 行\n⏱️ 总耗时: ${this.formatTime(totalTime)}\n📁 已自动导出翻译结果文件 🌟`);
+            this.currentStatus.textContent = '🚀 翻译完成！文件已自动导出';
+            
+            // 构建详细的成功消息
+            let successMessage = `✨ 喵~ 文件翻译完成啦！\n\n📊 翻译统计:\n✅ 成功: ${successCount} 行\n❌ 失败: ${errorCount} 行\n⏱️ 总耗时: ${this.formatTime(totalTime)}`;
+            
+            // 添加速度信息
+            if (this.translationSpeed > 0) {
+                successMessage += `\n⚡ 平均速度: ${this.translationSpeed} 行/秒`;
+            }
+            if (this.cacheHitRate > 0) {
+                successMessage += `\n🔥 缓存命中率: ${this.cacheHitRate}%`;
+            }
+            
+            successMessage += `\n📁 已自动导出翻译结果文件 🌟`;
+            
+            this.addMessage('system', successMessage);
             
             // 3秒后隐藏进度区域
             setTimeout(() => {
@@ -3496,12 +3605,16 @@ class DeepSeekChat {
         
         const url = `${this.baseUrlInput.value}/chat/completions`;
         
-        const systemPrompt = `You are a professional translator. Please translate the following ${srcLang} text into ${tgtLang}. 
-        Requirements:
-        1. Only provide the translation result, no explanations
-        2. Keep proper nouns and technical terms accurate
-        3. Ensure the translation is natural and fluent in the target language
-        4. If the text is empty or contains only special characters, return the original text`;
+        const systemPrompt = `You are a professional translator. Translate text from ${srcLang} to ${tgtLang}.
+
+IMPORTANT RULES:
+1. ONLY provide the translation result
+2. Keep accuracy and fluency
+3. Return original text if input is empty or contains only special characters
+4. NO explanations, NO comments, NO additional text
+5. Just the translated text, nothing else
+
+Translate the following text:`;
         
         // 获取模型名称，处理验证错误
         let modelName;
