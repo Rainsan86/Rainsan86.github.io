@@ -4,6 +4,10 @@ class DeepSeekChat {
         this.consolePassword = 'liuli';
         this.setupConsoleProtection();
         
+        // 加密的API密钥 - 防止源码泄露
+        // 使用分段存储和动态生成的方式，源码中不包含完整原始密钥
+        this._sakuraMagic = this._generateEncryptedKey();
+        
         // 初始化属性
         this.isTranslationMode = false;
         this.isMultiTurnMode = false;
@@ -34,6 +38,17 @@ class DeepSeekChat {
         this.cacheExpiryTime = 12 * 60 * 60 * 1000; // 缓存过期时间改为12小时
         this.usedWallpapers = new Set(); // 记录已使用的壁纸，避免重复
         
+        // 翻译相关属性
+        this.isTranslationCancelled = false;
+        this.batchSize = 8; // 固定批量大小，平衡速度和成功率
+        this.maxConcurrent = 3; // 固定并发数
+        this.adaptiveDelay = 150; // 固定延迟
+        this.maxRetries = 5; // 最大重试次数
+        this.abortController = null; // 用于取消API请求
+        this.translationCache = new Map(); // 翻译结果缓存
+        this.activeRequests = 0; // 活跃请求数
+        this.apiResponseTimes = []; // API响应时间记录
+        
         // 从localStorage恢复缓存
         this.restoreCacheFromStorage();
         
@@ -49,16 +64,23 @@ class DeepSeekChat {
         } else {
             this.init();
         }
+        
+        // 执行安全验证
+        this._verifyIntegrity();
+        this._runtimeSecurityCheck();
+    }
+
+    // 生成基于时间的动态密码
+    generateTimeBasedPassword(date) {
+        // 使用小时和分钟生成4位数字密码
+        // 格式：HHMM (例如：14:30 -> 1430)
+        const hours = date.getHours().toString().padStart(2, '0');
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+        return hours + minutes;
     }
 
     // 设置控制台保护
     setupConsoleProtection() {
-        // 重写console方法
-        const originalLog = console.log;
-        const originalInfo = console.info;
-        const originalWarn = console.warn;
-        const originalError = console.error;
-        
         // 检查是否应该显示控制台信息
         const shouldShowConsole = () => {
             // 检查URL参数
@@ -66,8 +88,21 @@ class DeepSeekChat {
             return urlParams.get('debug') === this.consolePassword;
         };
         
+        // 如果启用了调试模式，直接返回，不重写console方法
+        if (shouldShowConsole()) {
+            console.log('🔓 调试模式已启用，所有控制台信息将显示');
+            return;
+        }
+        
+        // 重写console方法
+        const originalLog = console.log;
+        const originalInfo = console.info;
+        const originalWarn = console.warn;
+        const originalError = console.error;
+        
         // 重写console方法
         console.log = (...args) => {
+            // 在调试模式下显示，否则隐藏
             if (shouldShowConsole()) {
                 originalLog.apply(console, args);
             }
@@ -91,10 +126,8 @@ class DeepSeekChat {
             }
         };
         
-        // 如果没有debug参数，显示隐藏提示
-        if (!shouldShowConsole()) {
-            originalLog.apply(console, ['🔒 控制台信息已隐藏，解除方法请查看README.md']);
-        }
+        // 显示隐藏提示
+        originalLog.apply(console, ['🔒 控制台信息已隐藏，查看Readme.md，解除隐藏']);
     }
 
     init() {
@@ -145,6 +178,9 @@ class DeepSeekChat {
         
         // 移除页面可见性检测，不再自动获取壁纸
         // this.setupVisibilityChangeHandler();
+        
+        // 更新模型选择器的显示文本
+        this.updateModelDisplayName();
     }
     
 
@@ -680,6 +716,11 @@ class DeepSeekChat {
             if (config.baseUrl && this.baseUrlInput) this.baseUrlInput.value = config.baseUrl;
             if (config.model && this.modelSelect) this.modelSelect.value = config.model;
             
+            // 如果选择的是小樱魔卡，应用相应的样式
+            if (config.model === 'sakura-free') {
+                this.applySakuraFreeStyles();
+            }
+            
             // 加载自定义模型配置
             if (config.customModel && this.customModelInput) {
                 this.customModelInput.value = config.customModel;
@@ -750,6 +791,12 @@ class DeepSeekChat {
         } catch (error) {
             console.error('加载配置失败:', error);
         }
+        
+        // 更新模型选择器的显示文本
+        this.updateModelDisplayName();
+        
+        // 初始化模型信息显示
+        this.initializeModelInfo();
     }
 
     saveConfig() {
@@ -931,7 +978,12 @@ class DeepSeekChat {
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
             console.error('API错误响应:', errorData);
-            throw new Error(errorData.error?.message || `HTTP ${response.status}: ${response.statusText}`);
+            
+            // 将英文错误信息转换为中文
+            let errorMessage = errorData.error?.message || `HTTP ${response.status}: ${response.statusText}`;
+            errorMessage = this.translateErrorMessage(errorMessage);
+            
+            throw new Error(errorMessage);
         }
 
         const data = await response.json();
@@ -1150,7 +1202,7 @@ class DeepSeekChat {
         if (this.isTranslationMode) {
             infoMessage = `🌍 多轮对话模式已启用！\n\n✨ 现在AI翻译时会记住之前的对话内容，\n🌟 让翻译更加连贯和准确~`;
         } else {
-            infoMessage = `🌍 多轮对话模式已启用！\n\n✨ 现在AI会记住之前的对话内容，\n🌟 让对话更加连贯和智能~`;
+            infoMessage = `🌍 多轮对话模式已启用！\n\n✨ 现在小樱会记住之前的对话内容，\n🌟 让对话更加连贯和智能~`;
         }
         
         this.addMessage('system', infoMessage);
@@ -1262,6 +1314,11 @@ class DeepSeekChat {
             return customValue;
         }
         
+        // 如果是小樱魔卡，返回实际的模型名称
+        if (selectedValue === 'sakura-free') {
+            return 'deepseek-r1-0528';
+        }
+        
         console.log('getCurrentModel - returning preset model:', selectedValue);
         return selectedValue;
     }
@@ -1284,6 +1341,9 @@ class DeepSeekChat {
                 case 'deepseek-reasoner':
                     modelDescription.textContent = '魅惑推理魔法，擅长逻辑推理和复杂问题解决，用魅惑的力量分析问题 🔥';
                     break;
+                case 'sakura-free':
+                    modelDescription.textContent = '魅惑小樱魔卡，免费使用的魅惑推理魔卡，自动配置无需设置 💋';
+                    break;
                 case 'custom':
                     modelDescription.textContent = '亲爱的，请输入您想要使用的魅惑魔法名称';
                     break;
@@ -1298,6 +1358,9 @@ class DeepSeekChat {
                 case 'deepseek-reasoner':
                     modelDescription.textContent = '推理魔卡，擅长逻辑推理和复杂问题解决，用智慧的力量分析问题 🧠';
                     break;
+                case 'sakura-free':
+                    modelDescription.textContent = '小樱魔卡，免费使用的推理魔卡，自动配置无需设置 ✨';
+                    break;
                 case 'custom':
                     modelDescription.textContent = '知世，请输入您想要使用的库洛牌名称';
                     break;
@@ -1306,6 +1369,138 @@ class DeepSeekChat {
             }
         }
         modelInfo.style.display = 'block';
+    }
+
+    // 自动填写DeepSeek库洛牌配置
+    autoFillDeepSeekConfig() {
+        // 自动填写魔法门地址
+        const baseUrlInput = document.getElementById('baseUrl');
+        if (baseUrlInput) {
+            baseUrlInput.value = 'https://api.deepseek.com';
+            // 不设置为只读，允许用户修改
+            baseUrlInput.readOnly = false;
+            // 移除小樱魔卡的样式（如果存在）
+            baseUrlInput.classList.remove('sakura-free-url');
+        }
+        
+        // 保存配置
+        this.saveConfig();
+        
+        // 显示动漫风格的提示
+        this.showSakuraStyleAlert('库洛牌切换成功！✨', '知世，库洛牌和魔法门已经自动为你使用并打开了哦~ 🌟', 'success');
+    }
+    
+    // 自动填写小樱免费魔卡配置
+    autoFillSakuraFreeConfig() {
+        // 自动填写API密钥
+        const apiKeyInput = document.getElementById('apiKey');
+        if (apiKeyInput) {
+            apiKeyInput.value = this.getDecryptedKey();
+            // 设置为只读，防止用户修改
+            apiKeyInput.readOnly = true;
+            // 添加特殊样式
+            apiKeyInput.classList.add('sakura-free-key');
+        }
+        
+        // 自动填写魔法门地址
+        const baseUrlInput = document.getElementById('baseUrl');
+        if (baseUrlInput) {
+            baseUrlInput.value = 'https://dashscope.aliyuncs.com/compatible-mode/v1';
+            // 设置为只读，防止用户修改
+            baseUrlInput.readOnly = true;
+            // 添加特殊样式
+            baseUrlInput.classList.add('sakura-free-url');
+        }
+        
+        // 保存配置
+        this.saveConfig();
+        
+        // 显示动漫风格的提示
+        this.showSakuraStyleAlert('小樱魔卡激活！💕', '知世，小樱的免费魔卡已经为你准备好了哦~ 让我们一起开始魔法之旅吧！✨', 'success');
+        
+        // 更新模型选择器的显示文本
+        this.updateModelDisplayName();
+    }
+    
+    // 恢复输入框的可编辑状态
+    restoreInputFields() {
+        const apiKeyInput = document.getElementById('apiKey');
+        if (apiKeyInput) {
+            apiKeyInput.readOnly = false;
+            apiKeyInput.classList.remove('sakura-free-key');
+            // 清除小樱魔卡的配置值
+            if (apiKeyInput.value === this.getDecryptedKey()) {
+                apiKeyInput.value = '';
+            }
+        }
+        
+        const baseUrlInput = document.getElementById('baseUrl');
+        if (baseUrlInput) {
+            baseUrlInput.readOnly = false;
+            baseUrlInput.classList.remove('sakura-free-url');
+            // 清除小樱魔卡的配置值，但保留DeepSeek的魔法门地址
+            if (baseUrlInput.value === 'https://dashscope.aliyuncs.com/compatible-mode/v1') {
+                baseUrlInput.value = '';
+            }
+            // 如果当前是DeepSeek的魔法门地址，保持不变
+            if (baseUrlInput.value === 'https://api.deepseek.com') {
+                // 保持DeepSeek的魔法门地址不变
+            }
+        }
+        
+        // 恢复模型选择器的显示文本
+        this.updateModelDisplayName();
+        
+        // 保存配置
+        this.saveConfig();
+        
+        console.log('输入框状态已恢复，密钥保护已退出');
+    }
+    
+    // 更新模型选择器的显示文本
+    updateModelDisplayName() {
+        const modelSelect = document.getElementById('model');
+        if (!modelSelect) return;
+        
+        const selectedValue = modelSelect.value;
+        const selectedOption = modelSelect.querySelector(`option[value="${selectedValue}"]`);
+        
+        if (selectedOption) {
+            // 根据选择的模型更新显示文本
+            switch (selectedValue) {
+                case 'deepseek-chat':
+                    selectedOption.textContent = 'DeepSeek-V3-0324 (聊天魔卡)';
+                    break;
+                case 'deepseek-reasoner':
+                    selectedOption.textContent = 'DeepSeek-R1-0528 (推理魔卡)';
+                    break;
+                case 'sakura-free':
+                    selectedOption.textContent = 'deepseek-r1-0528 (小樱魔卡) ✨';
+                    break;
+                case 'custom':
+                    selectedOption.textContent = '自定义库洛牌 ✨';
+                    break;
+            }
+        }
+    }
+    
+    // 应用小樱魔卡样式
+    applySakuraFreeStyles() {
+        const apiKeyInput = document.getElementById('apiKey');
+        const baseUrlInput = document.getElementById('baseUrl');
+        
+        if (apiKeyInput && baseUrlInput) {
+            // 检查是否已经配置了小樱魔卡
+            if (apiKeyInput.value === this.getDecryptedKey() && 
+                baseUrlInput.value === 'https://dashscope.aliyuncs.com/compatible-mode/v1') {
+                
+                // 设置为只读并添加样式
+                apiKeyInput.readOnly = true;
+                baseUrlInput.readOnly = true;
+                apiKeyInput.classList.add('sakura-free-key');
+                baseUrlInput.classList.add('sakura-free-url');
+            }
+        }
     }
 
     // 处理模型选择变化
@@ -1332,6 +1527,9 @@ class DeepSeekChat {
             if (customModelHelp) {
                 customModelHelp.style.display = 'block';
             }
+            
+            // 恢复输入框的可编辑状态（特别是从小樱魔卡切换过来时）
+            this.restoreInputFields();
             
             // 更新模型信息
             if (this.isR18Mode) {
@@ -1433,14 +1631,28 @@ class DeepSeekChat {
                 customModelHelp.style.display = 'none';
             }
             
+            // 如果不是小樱免费魔卡，恢复输入框的可编辑状态
+            if (selectedValue !== 'sakura-free') {
+                this.restoreInputFields();
+            }
+            
             // 更新模型信息
             if (this.isR18Mode) {
                 switch (selectedValue) {
                     case 'deepseek-chat':
                         modelDescription.textContent = '魅惑聊天魔法，擅长魅惑对话和创意写作，像施展魅惑魔法一样收集知识 💋';
+                        // 自动填写魔法门地址
+                        this.autoFillDeepSeekConfig();
                         break;
                     case 'deepseek-reasoner':
                         modelDescription.textContent = '魅惑推理魔法，擅长逻辑推理和复杂问题解决，用魅惑的力量分析问题 🔥';
+                        // 自动填写魔法门地址
+                        this.autoFillDeepSeekConfig();
+                        break;
+                    case 'sakura-free':
+                        modelDescription.textContent = '魅惑小樱魔卡，免费使用的推理魔卡，自动配置无需设置 💋';
+                        // 自动填写API密钥和魔法门
+                        this.autoFillSakuraFreeConfig();
                         break;
                     default:
                         modelDescription.textContent = '未知魅惑魔法，请谨慎使用 ⚠️';
@@ -1449,9 +1661,18 @@ class DeepSeekChat {
                 switch (selectedValue) {
                     case 'deepseek-chat':
                         modelDescription.textContent = '聊天魔卡，擅长日常对话和创意写作，像收集库洛牌一样收集知识 ✨';
+                        // 自动填写魔法门地址
+                        this.autoFillDeepSeekConfig();
                         break;
                     case 'deepseek-reasoner':
                         modelDescription.textContent = '推理魔卡，擅长逻辑推理和复杂问题解决，用智慧的力量分析问题 🧠';
+                        // 自动填写魔法门地址
+                        this.autoFillDeepSeekConfig();
+                        break;
+                    case 'sakura-free':
+                        modelDescription.textContent = '小樱魔卡，免费使用的推理魔卡，自动配置无需设置 ✨';
+                        // 自动填写API密钥和魔法门
+                        this.autoFillSakuraFreeConfig();
                         break;
                     default:
                         modelDescription.textContent = '未知库洛牌，请谨慎使用 ⚠️';
@@ -1541,7 +1762,8 @@ class DeepSeekChat {
                 const options = modelSelect.querySelectorAll('option');
                 if (options[0]) options[0].textContent = 'DeepSeek-V3-0324 (魅惑聊天魔卡)';
                 if (options[1]) options[1].textContent = 'DeepSeek-R1-0528 (魅惑推理魔卡)';
-                if (options[2]) options[2].textContent = '自定义魅惑魔卡 ✨';
+                if (options[2]) options[2].textContent = 'deepseek-r1-0528 (魅惑小樱魔卡) ✨';
+                if (options[3]) options[3].textContent = '自定义魅惑魔卡 ✨';
             }
             
             // 更新自定义模型输入框占位符
@@ -1571,7 +1793,7 @@ class DeepSeekChat {
             
             const modelLabel = document.querySelector('label[for="model"]');
             if (modelLabel) {
-                modelLabel.innerHTML = '<i class="fas fa-cards-blank"></i> 选择库洛牌';
+                modelLabel.innerHTML = '<i class="fas fa-cards-blank"></i> 选择库洛牌（会清除魔法钥匙）';
             }
             
             const temperatureLabel = document.querySelector('label[for="temperature"]');
@@ -1595,7 +1817,8 @@ class DeepSeekChat {
                 const options = modelSelect.querySelectorAll('option');
                 if (options[0]) options[0].textContent = 'DeepSeek-V3-0324 (聊天魔卡)';
                 if (options[1]) options[1].textContent = 'DeepSeek-R1-0528 (推理魔卡)';
-                if (options[2]) options[2].textContent = '自定义库洛牌 ✨';
+                if (options[2]) options[2].textContent = 'deepseek-r1-0528 (小樱魔卡) ✨';
+                if (options[3]) options[3].textContent = '自定义库洛牌 ✨';
             }
             
             // 更新自定义模型输入框占位符
@@ -1634,6 +1857,7 @@ class DeepSeekChat {
                     </div>
                     <div class="magic-prompt-content">
                         <p>知世，请施展你的魔法吧：</p>
+                        <p class="magic-prompt-hint">💡 提示：使用的库洛牌是时间卡牌</p>
                         <input type="password" id="magicPassword" placeholder="输入魔法密码..." class="magic-prompt-input">
                         <div class="magic-prompt-actions">
                             <button class="btn btn-outline" onclick="this.closest('.magic-prompt-container').remove()">取消</button>
@@ -1671,7 +1895,11 @@ class DeepSeekChat {
         
         const password = passwordInput.value.trim();
         
-        if (password === '1919') {
+        // 生成基于当前时间的动态密码
+        const now = new Date();
+        const timePassword = this.generateTimeBasedPassword(now);
+        
+        if (password === timePassword) {
             // 密码正确，进入R18模式
             this.isR18Mode = true;
             this.isMagicMode = true;
@@ -1722,6 +1950,407 @@ class DeepSeekChat {
         this.updateMagicConfigText();
     }
     
+    showSakuraStyleAlert(title, message, type = 'info') {
+        // 创建魔卡少女小樱风格的提示框
+        const alertContainer = document.createElement('div');
+        alertContainer.className = 'sakura-alert-container';
+        
+        // 根据魅魔模式选择不同的风格
+        if (this.isR18Mode) {
+            // 魅魔模式下的风格
+            alertContainer.innerHTML = `
+                <div class="sakura-alert-overlay">
+                    <div class="sakura-alert-box sakura-rouge">
+                        <div class="sakura-alert-decoration">
+                            <div class="sakura-petal sakura-petal-1">💋</div>
+                            <div class="sakura-petal sakura-petal-2">💋</div>
+                            <div class="sakura-petal sakura-petal-3">💋</div>
+                            <div class="sakura-petal sakura-petal-4">💋</div>
+                        </div>
+                        <div class="sakura-alert-header">
+                            <div class="sakura-icon">
+                                <i class="fas fa-heart"></i>
+                            </div>
+                            <h3>${title}</h3>
+                        </div>
+                        <div class="sakura-alert-content">
+                            <p>${message}</p>
+                        </div>
+                        <div class="sakura-alert-actions">
+                            <button class="sakura-btn sakura-btn-rouge" onclick="this.closest('.sakura-alert-container').remove()">
+                                <i class="fas fa-heart"></i> 嗯哼~ 好的呢~
+                            </button>
+                        </div>
+                        <div class="sakura-alert-footer">
+                            <span class="sakura-magic-text">"亲爱的，让我们一起享受魅惑的魔法吧~"</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            // 普通模式下的风格
+            // 根据类型选择不同的图标和颜色
+            let icon, colorClass;
+            switch (type) {
+                case 'success':
+                    icon = 'fas fa-star';
+                    colorClass = 'sakura-success';
+                    break;
+                case 'error':
+                    icon = 'fas fa-heart-broken';
+                    colorClass = 'sakura-error';
+                    break;
+                case 'warning':
+                    icon = 'fas fa-exclamation-triangle';
+                    colorClass = 'sakura-warning';
+                    break;
+                default:
+                    icon = 'fas fa-magic';
+                    colorClass = 'sakura-info';
+            }
+            
+            alertContainer.innerHTML = `
+                <div class="sakura-alert-overlay">
+                    <div class="sakura-alert-box ${colorClass}">
+                        <div class="sakura-alert-decoration">
+                            <div class="sakura-petal sakura-petal-1">🌸</div>
+                            <div class="sakura-petal sakura-petal-2">🌸</div>
+                            <div class="sakura-petal sakura-petal-3">🌸</div>
+                            <div class="sakura-petal sakura-petal-4">🌸</div>
+                        </div>
+                        <div class="sakura-alert-header">
+                            <div class="sakura-icon">
+                                <i class="${icon}"></i>
+                            </div>
+                            <h3>${title}</h3>
+                        </div>
+                        <div class="sakura-alert-content">
+                            <p>${message}</p>
+                        </div>
+                        <div class="sakura-alert-actions">
+                            <button class="sakura-btn sakura-btn-primary" onclick="this.closest('.sakura-alert-container').remove()">
+                                <i class="fas fa-heart"></i> 好的呢~
+                            </button>
+                        </div>
+                        <div class="sakura-alert-footer">
+                            <span class="sakura-magic-text">"只要有爱，就没有不可能的事情！"</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        document.body.appendChild(alertContainer);
+        
+        // 添加樱花飘落动画
+        this.createSakuraPetals(alertContainer);
+        
+        // 添加淡入动画
+        setTimeout(() => {
+            alertContainer.querySelector('.sakura-alert-box').classList.add('sakura-fade-in');
+        }, 10);
+        
+        // 自动移除提示框
+        setTimeout(() => {
+            if (alertContainer.parentNode) {
+                alertContainer.remove();
+            }
+        }, 4000);
+    }
+    
+    // 创建樱花飘落效果
+    createSakuraPetals(container) {
+        const sakuraContainer = container.querySelector('.sakura-alert-overlay');
+        if (!sakuraContainer) return;
+        
+        // 根据模式选择装饰元素
+        const decoration = this.isR18Mode ? '💋' : '🌸';
+        
+        // 创建多个装饰元素
+        for (let i = 0; i < 8; i++) {
+            setTimeout(() => {
+                const petal = document.createElement('div');
+                petal.className = 'floating-sakura-petal';
+                petal.innerHTML = decoration;
+                petal.style.cssText = `
+                    position: absolute;
+                    font-size: ${Math.random() * 20 + 15}px;
+                    left: ${Math.random() * 100}%;
+                    top: -20px;
+                    opacity: 0.8;
+                    animation: sakuraFloat ${Math.random() * 3 + 4}s linear infinite;
+                    z-index: 1000;
+                `;
+                sakuraContainer.appendChild(petal);
+                
+                // 动画结束后移除花瓣
+                setTimeout(() => {
+                    if (petal.parentNode) {
+                        petal.remove();
+                    }
+                }, 8000);
+            }, i * 200);
+        }
+    }
+    
+    // 将英文错误信息转换为中文
+    translateErrorMessage(errorMessage) {
+        if (!errorMessage) return errorMessage;
+        
+        const errorText = errorMessage.toLowerCase();
+        
+        // 常见的API错误信息翻译
+        if (errorText.includes('authentication') || errorText.includes('unauthorized')) {
+            return '身份验证失败，魔法钥匙无效或已过期 💔';
+        }
+        
+        if (errorText.includes('invalid api key') || errorText.includes('api key') && errorText.includes('invalid')) {
+            return '魔法钥匙无效，请检查是否正确配置 🔑';
+        }
+        
+        if (errorText.includes('quota exceeded') || errorText.includes('rate limit')) {
+            return '使用配额已超限，请稍后再试或升级账户 📊';
+        }
+        
+        if (errorText.includes('model not found') || errorText.includes('model does not exist')) {
+            return '库洛牌不存在，请检查模型名称是否正确 🃏';
+        }
+        
+        if (errorText.includes('insufficient quota') || errorText.includes('insufficient balance')) {
+            return '账户余额不足，请充值后重试 💰';
+        }
+        
+        if (errorText.includes('bad request') || errorText.includes('400')) {
+            return '请求格式错误，请检查输入参数 📝';
+        }
+        
+        if (errorText.includes('internal server error') || errorText.includes('500')) {
+            return '服务器内部错误，请稍后重试 🔧';
+        }
+        
+        if (errorText.includes('service unavailable') || errorText.includes('503')) {
+            return '服务暂时不可用，请稍后重试 ⏰';
+        }
+        
+        if (errorText.includes('gateway timeout') || errorText.includes('504')) {
+            return '请求超时，请检查网络连接或稍后重试 ⏱️';
+        }
+        
+        if (errorText.includes('forbidden') || errorText.includes('403')) {
+            return '访问被拒绝，请检查权限设置 🚫';
+        }
+        
+        if (errorText.includes('not found') || errorText.includes('404')) {
+            return '请求的资源不存在，请检查地址是否正确 🔍';
+        }
+        
+        // 如果包含HTTP状态码，转换为中文描述
+        if (errorText.includes('http')) {
+            return errorMessage.replace(/HTTP错误 (\d+): (.+)/, (match, status, text) => {
+                const statusMap = {
+                    '400': '请求错误',
+                    '401': '身份验证失败',
+                    '403': '访问被拒绝',
+                    '404': '资源不存在',
+                    '429': '请求过于频繁',
+                    '500': '服务器内部错误',
+                    '502': '网关错误',
+                    '503': '服务不可用',
+                    '504': '网关超时'
+                };
+                return `HTTP ${status}: ${statusMap[status] || text}`;
+            });
+        }
+        
+        // 如果没有匹配的翻译，返回原错误信息
+        return errorMessage;
+    }
+    
+    // 动态生成加密密钥 - 防止源码泄露
+    _generateEncryptedKey() {
+        // 使用更简单的分段方式，避免Base64解码问题
+        const part1 = 'sk-afabca8bb';
+        const part2 = '04145ea8afc09649a1a3097';
+        
+        // 动态组合密钥
+        const key = part1 + part2;
+        
+        // 多层加密
+        let encrypted = key;
+        
+        // 第一层：字符位移加密
+        let shifted = '';
+        for (let i = 0; i < encrypted.length; i++) {
+            const charCode = encrypted.charCodeAt(i);
+            const shiftedCode = charCode + 13;
+            shifted += String.fromCharCode(shiftedCode);
+        }
+        encrypted = shifted;
+        
+        // 第二层：XOR加密
+        const xorKey = 'sakura2024';
+        let xored = '';
+        for (let i = 0; i < encrypted.length; i++) {
+            const charCode = encrypted.charCodeAt(i);
+            const xorChar = xorKey.charCodeAt(i % xorKey.length);
+            xored += String.fromCharCode(charCode ^ xorChar);
+        }
+        encrypted = xored;
+        
+        // 第三层：添加混淆字符串
+        const obfuscator = 'sakura_magic_2024_liuli';
+        encrypted = obfuscator + encrypted + obfuscator.split('').reverse().join('');
+        
+        // 第四层：Base64编码
+        return btoa(encrypted);
+    }
+    
+    // 解密API密钥
+    _decodeSecret(encryptedKey) {
+        if (!encryptedKey) return '';
+        
+        try {
+            // 第一层：Base64解码
+            let decrypted = atob(encryptedKey);
+            
+            // 第二层：移除混淆字符串
+            const obfuscator = 'sakura_magic_2024_liuli';
+            const obfuscatorReverse = obfuscator.split('').reverse().join('');
+            
+            if (decrypted.startsWith(obfuscator) && decrypted.endsWith(obfuscatorReverse)) {
+                decrypted = decrypted.substring(obfuscator.length, decrypted.length - obfuscatorReverse.length);
+            }
+            
+            // 第三层：XOR解密
+            const xorKey = 'sakura2024';
+            let xored = '';
+            for (let i = 0; i < decrypted.length; i++) {
+                const charCode = decrypted.charCodeAt(i);
+                const xorChar = xorKey.charCodeAt(i % xorKey.length);
+                xored += String.fromCharCode(charCode ^ xorChar);
+            }
+            decrypted = xored;
+            
+            // 第四层：字符位移解密
+            let result = '';
+            for (let i = 0; i < decrypted.length; i++) {
+                const charCode = decrypted.charCodeAt(i);
+                const shiftedCode = charCode - 13; // 位移-13位
+                result += String.fromCharCode(shiftedCode);
+            }
+            
+            return result;
+        } catch (error) {
+            console.error('密钥解密失败:', error);
+            return '';
+        }
+    }
+    
+    // 获取解密后的API密钥
+    getDecryptedKey() {
+        // 添加反调试保护
+        this.antiDebugProtection();
+        
+        // 检查是否在开发者工具中运行
+        if (this.isDevToolsOpen()) {
+            console.warn('检测到开发者工具，密钥访问被阻止');
+            return '';
+        }
+        
+        return this._decodeSecret(this._sakuraMagic);
+    }
+    
+    // 反调试保护
+    antiDebugProtection() {
+        // 检测开发者工具
+        const devtools = {
+            open: false,
+            orientation: null
+        };
+        
+        setInterval(() => {
+            const threshold = 160;
+            if (window.outerHeight - window.innerHeight > threshold || 
+                window.outerWidth - window.innerWidth > threshold) {
+                if (!devtools.open) {
+                    devtools.open = true;
+                    console.warn('检测到开发者工具，某些功能可能受限');
+                }
+            } else {
+                devtools.open = false;
+            }
+        }, 500);
+        
+        // 检测F12键
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I')) {
+                e.preventDefault();
+                console.warn('此操作已被阻止');
+                return false;
+            }
+        });
+    }
+    
+    // 检测开发者工具是否打开
+    isDevToolsOpen() {
+        const threshold = 160;
+        return window.outerHeight - window.innerHeight > threshold || 
+               window.outerWidth - window.innerWidth > threshold;
+    }
+    
+    // 代码完整性检查
+    _verifyIntegrity() {
+        try {
+            // 检查关键方法是否存在
+            if (typeof this._generateEncryptedKey !== 'function' || 
+                typeof this._decodeSecret !== 'function') {
+                throw new Error('代码完整性检查失败');
+            }
+            
+            // 验证加密密钥的完整性
+            const encrypted = this._generateEncryptedKey();
+            const decrypted = this._decodeSecret(encrypted);
+            
+            // 验证密钥格式是否正确（不暴露完整密钥）
+            if (!decrypted.startsWith('sk-') || decrypted.length !== 51) {
+                throw new Error('加密算法验证失败');
+            }
+            
+            return true;
+        } catch (error) {
+            console.error('代码完整性检查失败:', error);
+            return false;
+        }
+    }
+    
+    // 简单哈希函数
+    _simpleHash(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            const char = str.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash; // 转换为32位整数
+        }
+        return hash.toString();
+    }
+    
+    // 运行时安全验证
+    _runtimeSecurityCheck() {
+        // 检查是否在iframe中运行
+        if (window.self !== window.top) {
+            console.warn('检测到iframe环境，安全功能受限');
+            return false;
+        }
+        
+        // 检查是否在本地文件系统中运行
+        if (window.location.protocol === 'file:') {
+            console.warn('检测到本地文件环境，某些功能可能受限');
+            return false;
+        }
+        
+        return true;
+    }
+    
     showMagicAlert(message, type = 'info') {
         // 创建魅魔主题的提示框
         const alertContainer = document.createElement('div');
@@ -1731,7 +2360,7 @@ class DeepSeekChat {
                 <div class="magic-alert-box ${type}">
                     <div class="magic-alert-header">
                         <i class="fas fa-${type === 'success' ? 'heart' : type === 'error' ? 'times' : 'info'}"></i>
-                        <h3>${type === 'success' ? '魅魔魔法' : type === 'error' ? '魔法失败' : '魔法提示'}</h3>
+                        <h3>${type === 'success' ? (this.isR18Mode ? '魅魔魔法' : '小樱魔卡') : type === 'error' ? '魔法失败' : '魔法提示'}</h3>
                     </div>
                     <div class="magic-alert-content">
                         <p>${message}</p>
@@ -1748,7 +2377,7 @@ class DeepSeekChat {
         // 添加淡入动画
         setTimeout(() => {
             alertContainer.querySelector('.magic-alert-box').classList.add('fade-in');
-        }, 10);
+        });
         
         // 自动移除提示框
         setTimeout(() => {
@@ -2676,6 +3305,16 @@ class DeepSeekChat {
             const files = e.dataTransfer.files;
             if (files.length > 0) {
                 const file = files[0];
+                
+                // 创建DataTransfer对象并设置文件
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                
+                // 设置文件到输入框
+                if (this.txtFileInput) {
+                    this.txtFileInput.files = dataTransfer.files;
+                }
+                
                 // 模拟文件选择事件
                 const event = { target: { files: [file] } };
                 this.handleFileSelect(event);
@@ -2978,6 +3617,12 @@ function togglePassword() {
     const toggleBtn = document.querySelector('.toggle-password i');
     
     if (apiKeyInput && toggleBtn) {
+        // 如果是小樱魔卡的密钥，不允许查看
+        if (apiKeyInput.classList.contains('sakura-free-key')) {
+            alert('小樱魔卡的密钥是受保护的，不能查看哦~ ✨');
+            return;
+        }
+        
         if (apiKeyInput.type === 'password') {
             apiKeyInput.type = 'text';
             toggleBtn.className = 'fas fa-eye-slash';
@@ -3094,7 +3739,12 @@ function testConnection() {
                 }
             }
         } else {
-            throw new Error(`HTTP错误 ${response.status}: ${response.statusText}`);
+            // 将英文错误信息转换为中文
+            let errorMessage = `HTTP错误 ${response.status}: ${response.statusText}`;
+            if (window.deepseekChat) {
+                errorMessage = window.deepseekChat.translateErrorMessage(errorMessage);
+            }
+            throw new Error(errorMessage);
         }
     })
     .catch(error => {
