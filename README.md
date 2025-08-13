@@ -180,6 +180,16 @@ cd https://github.com/Rainsan86/Rainsan86.github.io
 
 ## 📜 更新日志
 
+### v3.3.0 (当前网站部署版本)
+- ✨ 新增免费的小樱魔卡180天
+- 🎨 优化界面动画效果
+- 🔧 修复文件翻译失败
+
+### v3.3.0beta (当前版本)
+- 🎨 优化界面动画效果
+- 🔧 修复文件翻译失败
+
+
 ### v3.2.9beta (当前版本)
 - ✨ 新增文件翻译功能
 - 🌍 支持多语言翻译
@@ -235,6 +245,7 @@ cd https://github.com/Rainsan86/Rainsan86.github.io
 [![Fork](https://img.shields.io/badge/Fork-🍴-green?style=social)](https://github.com/Rainsan86/Rainsan86.github.io/forks)
 
 </div>
+
 
 
 
