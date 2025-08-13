@@ -3,7 +3,7 @@
 <div align="center">
 
 ![魔卡少女小樱](https://img.shields.io/badge/魔卡少女-小樱-pink?style=for-the-badge&logo=star)
-![版本](https://img.shields.io/badge/版本-v3.2.9beta-blue?style=for-the-badge)
+![版本](https://img.shields.io/badge/版本-v3.3.0-blue?style=for-the-badge)
 ![魔法](https://img.shields.io/badge/魔法-AI聊天-purple?style=for-the-badge)
 
 *"知世，让我们一起创造美好的回忆吧~"* 🌟
@@ -245,6 +245,7 @@ cd https://github.com/Rainsan86/Rainsan86.github.io
 [![Fork](https://img.shields.io/badge/Fork-🍴-green?style=social)](https://github.com/Rainsan86/Rainsan86.github.io/forks)
 
 </div>
+
 
 
 
