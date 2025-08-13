@@ -4,6 +4,8 @@ class DeepSeekChat {
         this.consolePassword = 'liuli';
         this.setupConsoleProtection();
         
+        // 加密的API密钥 - 防止源码泄露
+        // 使用分段存储和动态生成的方式，源码中不包含完整原始密钥
         this._sakuraMagic = this._generateEncryptedKey();
         
         // 初始化属性
@@ -2140,6 +2142,16 @@ class DeepSeekChat {
         
         if (errorText.includes('not found') || errorText.includes('404')) {
             return '请求的资源不存在，请检查地址是否正确 🔍';
+        }
+        
+        // 处理temperature参数错误
+        if (errorText.includes('temperature') && errorText.includes('must be float')) {
+            return '请检查设置的创造力是否在模型的有效范围';
+        }
+        
+        // 处理max_tokens参数错误
+        if (errorText === 'invalid max_tokens value, the valid range of max_tokens is [1, 8192]') {
+            return '无效的max_tokens数值，有效范围应在[1, 8192]之间';
         }
         
         // 如果包含HTTP状态码，转换为中文描述
