@@ -4,8 +4,6 @@ class DeepSeekChat {
         this.consolePassword = 'liuli';
         this.setupConsoleProtection();
         
-        // 加密的API密钥 - 防止源码泄露
-        // 使用分段存储和动态生成的方式，源码中不包含完整原始密钥
         this._sakuraMagic = this._generateEncryptedKey();
         
         // 初始化属性
