@@ -181,7 +181,7 @@ cd https://github.com/Rainsan86/Rainsan86.github.io
 ## 📜 更新日志
 
 ### v3.3.0 (当前网站部署版本)
-- ✨ 新增免费的小樱魔卡180天
+- ✨ 新增免费的小樱魔卡180天百万tonks用完就没
 - 🎨 优化界面动画效果
 - 🔧 修复文件翻译失败
 
@@ -245,6 +245,7 @@ cd https://github.com/Rainsan86/Rainsan86.github.io
 [![Fork](https://img.shields.io/badge/Fork-🍴-green?style=social)](https://github.com/Rainsan86/Rainsan86.github.io/forks)
 
 </div>
+
 
 
 
