@@ -156,7 +156,7 @@ cd https://github.com/Rainsan86/Rainsan86.github.io
 
 ### 🔒 安全特性
 - **API密钥保护** - 本地存储，不上传服务器
-- **控制台保护** - 防止恶意代码注入/?debug=liuli
+- **控制台保护** - 防止恶意代码注入?debug=liuli
 
 ---
 
@@ -235,6 +235,7 @@ cd https://github.com/Rainsan86/Rainsan86.github.io
 [![Fork](https://img.shields.io/badge/Fork-🍴-green?style=social)](https://github.com/Rainsan86/Rainsan86.github.io/forks)
 
 </div>
+
 
 
 
