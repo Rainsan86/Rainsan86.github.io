@@ -239,12 +239,13 @@ cd https://github.com/Rainsan86/Rainsan86.github.io
 
 *"只要有爱，就没有不可能的事情！"* 💕
 
-**魔卡少女小樱 v3.2.9beta** - 让魔法与AI相遇 ✨
+**魔卡少女小樱 v3.3.0** - 让魔法与AI相遇 ✨
 
 [![Star](https://img.shields.io/badge/Star-⭐-yellow?style=social)](https://github.com/Rainsan86/Rainsan86.github.io/stargazers)
 [![Fork](https://img.shields.io/badge/Fork-🍴-green?style=social)](https://github.com/Rainsan86/Rainsan86.github.io/forks)
 
 </div>
+
 
 
 
