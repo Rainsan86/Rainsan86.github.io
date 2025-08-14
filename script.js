@@ -155,11 +155,18 @@ class DeepSeekChat {
             console.log('拖拽功能初始化完成');
         }, 100);
         
-        // 如果翻译模式已启用，确保文件翻译区域显示
+        // 如果翻译模式已启用，确保文件翻译区域和翻译选择控件显示
         if (this.isTranslationMode) {
             setTimeout(() => {
                 this.showFileTranslationSection();
-                console.log('翻译模式已启用，文件翻译区域应显示');
+                this.showTranslationControls();
+                console.log('翻译模式已启用，文件翻译区域和翻译选择控件应显示');
+            }, 200);
+        } else {
+            // 如果翻译模式未启用，确保翻译选择控件隐藏
+            setTimeout(() => {
+                this.hideTranslationControls();
+                console.log('翻译模式未启用，翻译选择控件应隐藏');
             }, 200);
         }
         
@@ -731,11 +738,17 @@ class DeepSeekChat {
                 this.translationModeCheckbox.checked = config.translationMode;
                 this.isTranslationMode = config.translationMode;
                 
-                // 如果翻译模式已启用，应用相应的CSS类
+                // 根据翻译模式状态设置控件显示
                 if (this.isTranslationMode) {
                     this.addTranslationModeClasses();
                     this.showFileTranslationSection();
+                    this.showTranslationControls();
+                } else {
+                    this.hideTranslationControls();
                 }
+            } else {
+                // 如果翻译模式未配置，默认隐藏翻译选择控件
+                this.hideTranslationControls();
             }
             
             // 加载多轮对话模式配置
@@ -1155,6 +1168,8 @@ Translate the following text:`;
                 this.addTranslationModeClasses();
                 // 显示文件翻译区域
                 this.showFileTranslationSection();
+                // 显示翻译选择控件
+                this.showTranslationControls();
             } else {
                 // 退出翻译模式
                 console.log('退出翻译模式');
@@ -1162,6 +1177,8 @@ Translate the following text:`;
                 this.removeTranslationModeClasses();
                 // 隐藏文件翻译区域
                 this.hideFileTranslationSection();
+                // 隐藏翻译选择控件
+                this.hideTranslationControls();
                 
                 // 不再清空多轮对话历史记录，让两个模式完全独立
             }
@@ -1246,6 +1263,22 @@ Translate the following text:`;
         };
         return langNames[langCode] || langCode;
     }
+    
+    // 显示翻译选择控件
+    showTranslationControls() {
+        const translationControls = document.querySelector('.translation-controls');
+        if (translationControls) {
+            translationControls.style.display = 'flex';
+        }
+    }
+    
+    // 隐藏翻译选择控件
+    hideTranslationControls() {
+        const translationControls = document.querySelector('.translation-controls');
+        if (translationControls) {
+            translationControls.style.display = 'none';
+        }
+    }
 
     // 获取当前选择的模型名称
     getCurrentModel() {
@@ -1293,7 +1326,7 @@ Translate the following text:`;
         
         // 如果是小樱魔卡，返回实际的模型名称
         if (selectedValue === 'sakura-free') {
-            return 'deepseek-v3';
+            return 'deepseek-r1-0528';
         }
         
         console.log('getCurrentModel - returning preset model:', selectedValue);
@@ -1319,7 +1352,7 @@ Translate the following text:`;
                     modelDescription.textContent = '魅惑推理魔法，擅长逻辑推理和复杂问题解决，用魅惑的力量分析问题 🔥';
                     break;
                 case 'sakura-free':
-                    modelDescription.textContent = '魅惑小樱魔卡，免费使用的魅惑聊天魔卡，自动配置无需设置 💋';
+                    modelDescription.textContent = '魅惑小樱魔卡，免费使用的魅惑推理魔卡，自动配置无需设置 💋';
                     break;
                 case 'custom':
                     modelDescription.textContent = '亲爱的，请输入您想要使用的魅惑魔法名称';
@@ -1336,7 +1369,7 @@ Translate the following text:`;
                     modelDescription.textContent = '推理魔卡，擅长逻辑推理和复杂问题解决，用智慧的力量分析问题 🧠';
                     break;
                 case 'sakura-free':
-                    modelDescription.textContent = '小樱魔卡，免费使用的聊天魔卡，自动配置无需设置 ✨';
+                    modelDescription.textContent = '小樱魔卡，免费使用的推理魔卡，自动配置无需设置 ✨';
                     break;
                 case 'custom':
                     modelDescription.textContent = '知世，请输入您想要使用的库洛牌名称';
@@ -1374,6 +1407,12 @@ Translate the following text:`;
             return;
         }
         
+        // 隐藏魔法钥匙输入框
+        const apiKeyFormGroup = document.querySelector('label[for="apiKey"]')?.closest('.form-group');
+        if (apiKeyFormGroup) {
+            apiKeyFormGroup.style.display = 'none';
+        }
+        
         const apiKeyInput = document.getElementById('apiKey');
         if (apiKeyInput) {
             apiKeyInput.value = this.getDecryptedKey();
@@ -1405,6 +1444,12 @@ Translate the following text:`;
     
     // 恢复输入框的可编辑状态
     restoreInputFields() {
+        // 恢复魔法钥匙输入框的显示
+        const apiKeyFormGroup = document.querySelector('label[for="apiKey"]')?.closest('.form-group');
+        if (apiKeyFormGroup) {
+            apiKeyFormGroup.style.display = 'block';
+        }
+        
         const apiKeyInput = document.getElementById('apiKey');
         if (apiKeyInput) {
             apiKeyInput.readOnly = false;
@@ -1456,7 +1501,7 @@ Translate the following text:`;
                     selectedOption.textContent = 'DeepSeek-R1-0528 (推理魔卡)';
                     break;
                 case 'sakura-free':
-                    selectedOption.textContent = 'deepseek-v3 (小樱魔卡) ✨';
+                    selectedOption.textContent = 'deepseek-r1-0528 (小樱魔卡) ✨';
                     break;
                 case 'custom':
                     selectedOption.textContent = '自定义库洛牌 ✨';
@@ -1474,6 +1519,12 @@ Translate the following text:`;
             // 检查是否已经配置了小樱魔卡
             if (apiKeyInput.value === this.getDecryptedKey() && 
                 baseUrlInput.value === 'https://dashscope.aliyuncs.com/compatible-mode/v1') {
+                
+                // 隐藏魔法钥匙输入框
+                const apiKeyFormGroup = document.querySelector('label[for="apiKey"]')?.closest('.form-group');
+                if (apiKeyFormGroup) {
+                    apiKeyFormGroup.style.display = 'none';
+                }
                 
                 // 设置为只读并添加样式
                 apiKeyInput.readOnly = true;
@@ -1650,7 +1701,7 @@ Translate the following text:`;
                         this.autoFillDeepSeekConfig();
                         break;
                     case 'sakura-free':
-                        modelDescription.textContent = '小樱魔卡，免费使用的聊天魔卡，自动配置无需设置 ✨';
+                        modelDescription.textContent = '小樱魔卡，免费使用的推理魔卡，自动配置无需设置 ✨';
                         this.autoFillSakuraFreeConfig();
                         break;
                     default:
@@ -1741,7 +1792,7 @@ Translate the following text:`;
                 const options = modelSelect.querySelectorAll('option');
                 if (options[0]) options[0].textContent = 'DeepSeek-V3-0324 (魅惑聊天魔卡)';
                 if (options[1]) options[1].textContent = 'DeepSeek-R1-0528 (魅惑推理魔卡)';
-                if (options[2]) options[2].textContent = 'deepseek-v3 (魅惑小樱魔卡) ✨';
+                if (options[2]) options[2].textContent = 'deepseek-r1-0528 (魅惑小樱魔卡) ✨';
                 if (options[3]) options[3].textContent = '自定义魅惑魔卡 ✨';
             }
             
@@ -1796,7 +1847,7 @@ Translate the following text:`;
                 const options = modelSelect.querySelectorAll('option');
                 if (options[0]) options[0].textContent = 'DeepSeek-V3-0324 (聊天魔卡)';
                 if (options[1]) options[1].textContent = 'DeepSeek-R1-0528 (推理魔卡)';
-                if (options[2]) options[2].textContent = 'deepseek-v3 (小樱魔卡) ✨';
+                if (options[2]) options[2].textContent = 'deepseek-r1-0528 (小樱魔卡) ✨';
                 if (options[3]) options[3].textContent = '自定义库洛牌 ✨';
             }
             
