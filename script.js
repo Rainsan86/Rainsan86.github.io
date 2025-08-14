@@ -1,10 +1,10 @@
 class DeepSeekChat {
     constructor() {
-        // 控制台密码保护
         this.consolePassword = 'liuli';
         this.setupConsoleProtection();
+        
         this._sakuraMagic = this._generateEncryptedKey();
-
+        
         // 初始化属性
         this.isTranslationMode = false;
         this.isMultiTurnMode = false;
@@ -78,16 +78,12 @@ class DeepSeekChat {
         return hours + minutes;
     }
 
-    // 设置控制台保护
     setupConsoleProtection() {
-        // 检查是否应该显示控制台信息
         const shouldShowConsole = () => {
-            // 检查URL参数
             const urlParams = new URLSearchParams(window.location.search);
             return urlParams.get('debug') === this.consolePassword;
         };
         
-        // 如果启用了调试模式，直接返回，不重写console方法
         if (shouldShowConsole()) {
             console.log('🔓 调试模式已启用，所有控制台信息将显示');
             return;
@@ -101,7 +97,6 @@ class DeepSeekChat {
         
         // 重写console方法
         console.log = (...args) => {
-            // 在调试模式下显示，否则隐藏
             if (shouldShowConsole()) {
                 originalLog.apply(console, args);
             }
@@ -817,6 +812,11 @@ class DeepSeekChat {
         const message = this.userInput.value.trim();
         if (!message) return;
 
+        if (this.modelSelect && this.modelSelect.value === 'sakura-free' && this.isDevToolsOpen()) {
+            this.showSakuraStyleAlert('魔法保护！🔒', '知世，检测到开发者工具已打开，小樱魔卡为了保护你的安全暂时无法使用哦~ 请关闭控制台后刷新页面重新选择小樱魔卡吧！✨', 'error');
+            return;
+        }
+
         // 验证配置
         if (!this.apiKeyInput.value.trim()) {
             this.showError('请先配置魔法钥匙');
@@ -1293,7 +1293,7 @@ Translate the following text:`;
         
         // 如果是小樱魔卡，返回实际的模型名称
         if (selectedValue === 'sakura-free') {
-            return 'deepseek-r1-0528';
+            return 'deepseek-v3';
         }
         
         console.log('getCurrentModel - returning preset model:', selectedValue);
@@ -1319,7 +1319,7 @@ Translate the following text:`;
                     modelDescription.textContent = '魅惑推理魔法，擅长逻辑推理和复杂问题解决，用魅惑的力量分析问题 🔥';
                     break;
                 case 'sakura-free':
-                    modelDescription.textContent = '魅惑小樱魔卡，免费使用的魅惑推理魔卡，自动配置无需设置 💋';
+                    modelDescription.textContent = '魅惑小樱魔卡，免费使用的魅惑聊天魔卡，自动配置无需设置 💋';
                     break;
                 case 'custom':
                     modelDescription.textContent = '亲爱的，请输入您想要使用的魅惑魔法名称';
@@ -1336,7 +1336,7 @@ Translate the following text:`;
                     modelDescription.textContent = '推理魔卡，擅长逻辑推理和复杂问题解决，用智慧的力量分析问题 🧠';
                     break;
                 case 'sakura-free':
-                    modelDescription.textContent = '小樱魔卡，免费使用的推理魔卡，自动配置无需设置 ✨';
+                    modelDescription.textContent = '小樱魔卡，免费使用的聊天魔卡，自动配置无需设置 ✨';
                     break;
                 case 'custom':
                     modelDescription.textContent = '知世，请输入您想要使用的库洛牌名称';
@@ -1369,7 +1369,11 @@ Translate the following text:`;
     
     // 自动填写小樱免费魔卡配置
     autoFillSakuraFreeConfig() {
-        // 自动填写API密钥
+        if (this.isDevToolsOpen()) {
+            this.showSakuraStyleAlert('魔法保护！🔒', '知世，检测到开发者工具已打开，小樱魔卡为了保护你的安全暂时无法使用哦~ 请关闭控制台后刷新页面重新选择小樱魔卡吧！✨', 'error');
+            return;
+        }
+        
         const apiKeyInput = document.getElementById('apiKey');
         if (apiKeyInput) {
             apiKeyInput.value = this.getDecryptedKey();
@@ -1431,7 +1435,7 @@ Translate the following text:`;
         // 保存配置
         this.saveConfig();
         
-        console.log('输入框状态已恢复，密钥保护已退出');
+                    console.log('输入框状态已恢复');
     }
     
     // 更新模型选择器的显示文本
@@ -1452,7 +1456,7 @@ Translate the following text:`;
                     selectedOption.textContent = 'DeepSeek-R1-0528 (推理魔卡)';
                     break;
                 case 'sakura-free':
-                    selectedOption.textContent = 'deepseek-r1-0528 (小樱魔卡) ✨';
+                    selectedOption.textContent = 'deepseek-v3 (小樱魔卡) ✨';
                     break;
                 case 'custom':
                     selectedOption.textContent = '自定义库洛牌 ✨';
@@ -1627,8 +1631,7 @@ Translate the following text:`;
                         this.autoFillDeepSeekConfig();
                         break;
                     case 'sakura-free':
-                        modelDescription.textContent = '魅惑小樱魔卡，免费使用的推理魔卡，自动配置无需设置 💋';
-                        // 自动填写API密钥和魔法门
+                        modelDescription.textContent = '魅惑小樱魔卡，免费使用的聊天魔卡，自动配置无需设置 💋';
                         this.autoFillSakuraFreeConfig();
                         break;
                     default:
@@ -1647,8 +1650,7 @@ Translate the following text:`;
                         this.autoFillDeepSeekConfig();
                         break;
                     case 'sakura-free':
-                        modelDescription.textContent = '小樱魔卡，免费使用的推理魔卡，自动配置无需设置 ✨';
-                        // 自动填写API密钥和魔法门
+                        modelDescription.textContent = '小樱魔卡，免费使用的聊天魔卡，自动配置无需设置 ✨';
                         this.autoFillSakuraFreeConfig();
                         break;
                     default:
@@ -1739,7 +1741,7 @@ Translate the following text:`;
                 const options = modelSelect.querySelectorAll('option');
                 if (options[0]) options[0].textContent = 'DeepSeek-V3-0324 (魅惑聊天魔卡)';
                 if (options[1]) options[1].textContent = 'DeepSeek-R1-0528 (魅惑推理魔卡)';
-                if (options[2]) options[2].textContent = 'deepseek-r1-0528 (魅惑小樱魔卡) ✨';
+                if (options[2]) options[2].textContent = 'deepseek-v3 (魅惑小樱魔卡) ✨';
                 if (options[3]) options[3].textContent = '自定义魅惑魔卡 ✨';
             }
             
@@ -1794,7 +1796,7 @@ Translate the following text:`;
                 const options = modelSelect.querySelectorAll('option');
                 if (options[0]) options[0].textContent = 'DeepSeek-V3-0324 (聊天魔卡)';
                 if (options[1]) options[1].textContent = 'DeepSeek-R1-0528 (推理魔卡)';
-                if (options[2]) options[2].textContent = 'deepseek-r1-0528 (小樱魔卡) ✨';
+                if (options[2]) options[2].textContent = 'deepseek-v3 (小樱魔卡) ✨';
                 if (options[3]) options[3].textContent = '自定义库洛牌 ✨';
             }
             
@@ -2027,12 +2029,13 @@ Translate the following text:`;
             alertContainer.querySelector('.sakura-alert-box').classList.add('sakura-fade-in');
         }, 10);
         
-        // 自动移除提示框
+        // 自动移除提示框 - 根据类型设置不同的显示时间
+        const autoCloseTime = type === 'error' ? 8000 : 6000; // 错误提示显示8秒，其他显示6秒
         setTimeout(() => {
             if (alertContainer.parentNode) {
                 alertContainer.remove();
             }
-        }, 4000);
+        }, autoCloseTime);
     }
     
     // 创建樱花飘落效果
@@ -2153,73 +2156,163 @@ Translate the following text:`;
         return errorMessage;
     }
     
-    // 动态生成加密密钥 - 防止源码泄露
     _generateEncryptedKey() {
-        // 使用简单的分段方式
-        const part1 = 'sk-afabca8bb';
-        const part2 = '04145ea8afc09649a1a3097';
+        const encodedParts = [
+            [0x73, 0x6B, 0x2D, 0x34, 0x39, 0x30, 0x63, 0x36],
+            [0x35, 0x63, 0x63, 0x30, 0x35, 0x34, 0x35, 0x34],
+            [0x66, 0x64, 0x66, 0x38, 0x30, 0x31, 0x66, 0x32],
+            [0x37, 0x66, 0x37, 0x66, 0x65, 0x36, 0x66, 0x66],
+            [0x33, 0x37, 0x65]
+        ];
         
-        // 动态组合密钥
-        const key = part1 + part2;
-        
-        // 简单的字符位移加密
-        let encrypted = '';
-        for (let i = 0; i < key.length; i++) {
-            const charCode = key.charCodeAt(i);
-            const shiftedCode = charCode + 13;
-            encrypted += String.fromCharCode(shiftedCode);
+        const keyArray = [];
+        for (const part of encodedParts) {
+            keyArray.push(...part);
         }
         
-        // Base64编码
-        return btoa(encrypted);
+        const encryptedArray = this._customEncrypt(keyArray);
+        const segments = this._splitIntoSegments(encryptedArray);
+        return this._obfuscateSegments(segments);
     }
     
-    // 解密API密钥
-    _decodeSecret(encryptedKey) {
-        if (!encryptedKey) return '';
+    _customEncrypt(data) {
+        const baseSalt = [0x1A, 0x2B, 0x3C, 0x4D, 0x5E, 0x6F, 0x7A, 0x8B];
+        const dynamicSalt = [0x9C, 0x8D, 0x7E, 0x6F, 0x5A, 0x4B, 0x3C, 0x2D];
+        const encrypted = [];
         
-        try {
-            // 第一层：Base64解码
-            let decrypted = atob(encryptedKey);
+        for (let i = 0; i < data.length; i++) {
+            let encryptedByte = data[i] ^ baseSalt[i % baseSalt.length];
+            encryptedByte = ((encryptedByte << 4) | (encryptedByte >> 4)) & 0xFF;
+            encryptedByte = encryptedByte ^ dynamicSalt[i % dynamicSalt.length];
+            encryptedByte = (encryptedByte + baseSalt[i % baseSalt.length]) & 0xFF;
+            encryptedByte = encryptedByte ^ (i * 7 + 13);
+            encrypted.push(encryptedByte);
+        }
+        
+        return encrypted;
+    }
+    
+    _splitIntoSegments(data) {
+        const segments = [];
+        const segmentSize = 8;
+        
+        for (let i = 0; i < data.length; i += segmentSize) {
+            segments.push(data.slice(i, i + segmentSize));
+        }
+        
+        return segments;
+    }
+    
+    _obfuscateSegments(segments) {
+        const obfuscated = [];
+        const magicNumbers = [0xDE, 0xAD, 0xBE, 0xEF, 0xCA, 0xFE, 0xBA, 0xBE];
+        
+        for (let i = 0; i < segments.length; i++) {
+            const segment = segments[i];
             
-            // 第二层：字符位移解密
-            let result = '';
-            for (let i = 0; i < decrypted.length; i++) {
-                const charCode = decrypted.charCodeAt(i);
-                const shiftedCode = charCode - 13; // 位移-13位
-                result += String.fromCharCode(shiftedCode);
+            const xoredSegment = [];
+            for (let j = 0; j < segment.length; j++) {
+                xoredSegment.push(segment[j] ^ magicNumbers[j % magicNumbers.length]);
             }
             
-            return result;
+            const base64String = btoa(String.fromCharCode(...xoredSegment));
+            const randomChars = ['_', '-', '.', '~'][i % 4];
+            const obfuscatedString = randomChars + base64String + randomChars;
+            
+            obfuscated.push(obfuscatedString);
+        }
+        
+        return obfuscated;
+    }
+    
+    _decodeSecret(obfuscatedSegments) {
+        if (!obfuscatedSegments || !Array.isArray(obfuscatedSegments)) return '';
+        
+        try {
+            const segments = this._deobfuscateSegments(obfuscatedSegments);
+            const encryptedArray = this._mergeSegments(segments);
+            const decryptedArray = this._customDecrypt(encryptedArray);
+            return String.fromCharCode(...decryptedArray);
         } catch (error) {
-            console.error('密钥解密失败:', error);
+            console.error('解密失败:', error);
             return '';
         }
     }
     
-    // 获取解密后的API密钥
-    getDecryptedKey() {
-        // 添加反调试保护
-        this.antiDebugProtection();
+    _deobfuscateSegments(obfuscatedSegments) {
+        const segments = [];
+        const magicNumbers = [0xDE, 0xAD, 0xBE, 0xEF, 0xCA, 0xFE, 0xBA, 0xBE];
         
-        // 检查是否在开发者工具中运行
-        if (this.isDevToolsOpen()) {
-            console.warn('检测到开发者工具，密钥访问被阻止');
-            return '';
+        for (let i = 0; i < obfuscatedSegments.length; i++) {
+            const obfuscated = obfuscatedSegments[i];
+            
+            const base64String = obfuscated.substring(1, obfuscated.length - 1);
+            const xoredSegment = Array.from(atob(base64String), char => char.charCodeAt(0));
+            
+            const segment = [];
+            for (let j = 0; j < xoredSegment.length; j++) {
+                segment.push(xoredSegment[j] ^ magicNumbers[j % magicNumbers.length]);
+            }
+            
+            segments.push(segment);
+        }
+        
+        return segments;
+    }
+    
+    _mergeSegments(segments) {
+        const merged = [];
+        for (const segment of segments) {
+            merged.push(...segment);
+        }
+        return merged;
+    }
+    
+    _customDecrypt(data) {
+        const baseSalt = [0x1A, 0x2B, 0x3C, 0x4D, 0x5E, 0x6F, 0x7A, 0x8B];
+        const dynamicSalt = [0x9C, 0x8D, 0x7E, 0x6F, 0x5A, 0x4B, 0x3C, 0x2D];
+        const decrypted = [];
+        
+        for (let i = 0; i < data.length; i++) {
+            let decryptedByte = data[i] ^ (i * 7 + 13);
+            decryptedByte = (decryptedByte - baseSalt[i % baseSalt.length]) & 0xFF;
+            decryptedByte = decryptedByte ^ dynamicSalt[i % dynamicSalt.length];
+            decryptedByte = ((decryptedByte >> 4) | (decryptedByte << 4)) & 0xFF;
+            decryptedByte = decryptedByte ^ baseSalt[i % baseSalt.length];
+            decrypted.push(decryptedByte);
+        }
+        
+        return decrypted;
+    }
+    
+    getDecryptedKey() {
+        if (this.isSakuraModeActive()) {
+            this.antiDebugProtection();
+            
+            if (this.isDevToolsOpen()) {
+                console.warn('检测到开发者工具，访问被阻止');
+                return '';
+            }
         }
         
         return this._decodeSecret(this._sakuraMagic);
     }
     
-    // 反调试保护
     antiDebugProtection() {
-        // 检测开发者工具
+        if (!this.isSakuraModeActive()) {
+            return;
+        }
+        
         const devtools = {
             open: false,
             orientation: null
         };
         
         setInterval(() => {
+            if (!this.isSakuraModeActive()) {
+                return;
+            }
+            
             const threshold = 160;
             if (window.outerHeight - window.innerHeight > threshold || 
                 window.outerWidth - window.innerWidth > threshold) {
@@ -2232,17 +2325,23 @@ Translate the following text:`;
             }
         }, 500);
         
-        // 检测F12键
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I')) {
+        const keydownHandler = (e) => {
+            if (this.isSakuraModeActive() && (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I'))) {
                 e.preventDefault();
                 console.warn('此操作已被阻止');
                 return false;
             }
-        });
+        };
+        
+        document.removeEventListener('keydown', keydownHandler);
+        document.addEventListener('keydown', keydownHandler);
     }
     
-    // 检测开发者工具是否打开
+    isSakuraModeActive() {
+        const modelSelect = document.getElementById('model');
+        return modelSelect && modelSelect.value === 'sakura-free';
+    }
+    
     isDevToolsOpen() {
         const threshold = 160;
         return window.outerHeight - window.innerHeight > threshold || 
@@ -2258,13 +2357,11 @@ Translate the following text:`;
                 throw new Error('代码完整性检查失败');
             }
             
-            // 验证加密密钥的完整性
             const encrypted = this._generateEncryptedKey();
             const decrypted = this._decodeSecret(encrypted);
             
-            // 验证密钥格式是否正确（不暴露完整密钥）
             if (!decrypted.startsWith('sk-')) {
-                throw new Error('加密算法验证失败');
+                throw new Error('验证失败');
             }
             
             return true;
@@ -2330,12 +2427,13 @@ Translate the following text:`;
             alertContainer.querySelector('.magic-alert-box').classList.add('fade-in');
         });
         
-        // 自动移除提示框
+        // 自动移除提示框 - 根据类型设置不同的显示时间
+        const autoCloseTime = type === 'error' ? 6000 : 4000; // 错误提示显示6秒，其他显示4秒
         setTimeout(() => {
             if (alertContainer.parentNode) {
                 alertContainer.remove();
             }
-        }, 3000);
+        }, autoCloseTime);
     }
     
     // 显示快捷输入反馈
@@ -2379,7 +2477,6 @@ Translate the following text:`;
     detectMobileAndAdapt() {
         const isMobile = this.isMobileDevice();
         
-        // 添加调试信息
         console.log('设备检测结果:', {
             userAgent: navigator.userAgent,
             screenWidth: window.innerWidth,
@@ -2496,7 +2593,7 @@ Translate the following text:`;
             firstCard.parentNode.insertBefore(mobileTip, firstCard);
         }
 
-        // 3秒后自动隐藏
+        // 5秒后自动隐藏
         setTimeout(() => {
             if (mobileTip.parentNode) {
                 mobileTip.style.opacity = '0';
@@ -2507,7 +2604,7 @@ Translate the following text:`;
                     }
                 }, 500);
             }
-        }, 3000);
+        }, 5000);
     }
     
     // 文件翻译相关方法
@@ -3737,9 +3834,8 @@ function togglePassword() {
     const toggleBtn = document.querySelector('.toggle-password i');
     
     if (apiKeyInput && toggleBtn) {
-        // 如果是小樱魔卡的密钥，不允许查看
-        if (apiKeyInput.classList.contains('sakura-free-key')) {
-            alert('小樱魔卡的密钥是受保护的，不能查看哦~ ✨');
+                    if (apiKeyInput.classList.contains('sakura-free-key')) {
+                alert('小樱魔卡的密钥是受保护的，不能查看哦~ ✨');
             return;
         }
         
@@ -3787,6 +3883,12 @@ function clearCustomModel() {
 function testConnection() {
     if (!window.deepseekChat) {
         alert('系统未初始化，请刷新页面重试');
+        return;
+    }
+
+    const modelSelect = document.getElementById('model');
+    if (modelSelect && modelSelect.value === 'sakura-free' && window.deepseekChat.isDevToolsOpen()) {
+        window.deepseekChat.showSakuraStyleAlert('魔法保护！🔒', '知世，检测到开发者工具已打开，小樱魔卡为了保护你的安全暂时无法使用哦~ 请关闭控制台后刷新页面重新选择小樱魔卡吧！✨', 'error');
         return;
     }
 
