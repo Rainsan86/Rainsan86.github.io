@@ -248,7 +248,7 @@ class DeepSeekChat {
             // 使用更大的页码范围来获取更多样化的壁纸
             const randomPage = Math.floor(Math.random() * 20) + 1; // 随机页码1-20
             const randomSize = Math.floor(Math.random() * 5) + 1; // 随机大小1-5
-            const response = await fetch(`https://konfans-api.x-x.work/?PC&size=${randomSize}&page=${randomPage}`);
+            const response = await fetch(`https://cdn-eo.miomoe.cn/?PC&size=${randomSize}&page=${randomPage}`);
             
             if (response.ok) {
                 const data = await response.json();
@@ -297,7 +297,7 @@ class DeepSeekChat {
                     try {
                         const randomPage = Math.floor(Math.random() * 30) + 1; // 更大的随机范围
                         const randomSize = Math.floor(Math.random() * 5) + 1;
-                        const response = await fetch(`https://konfans-api.x-x.work/?PC&size=${randomSize}&page=${randomPage}`);
+                        const response = await fetch(`https://cdn-eo.miomoe.cn/?PC&size=${randomSize}&page=${randomPage}`);
                         
                         if (response.ok) {
                             const data = await response.json();
