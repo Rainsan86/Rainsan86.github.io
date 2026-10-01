@@ -1,0 +1,182 @@
+/* ================================================================
+   网站精灵（小鲸鱼挂件）
+   结构与几何参数照抄 DeepSeek-Balance-Whale-Widget：
+   - 挂件盒子为正方形，鲸鱼占右下 59.45%，气泡按 1026:700 视口绘制
+   - 所有字号用 --wsp-u（= 盒宽 / 1026）换算，随挂件缩放联动
+   与原项目的差别只有两处：配色接到博客主题变量、层级避开导航与侧栏
+   ================================================================ */
+:root{
+  --wsp-bubble:#ffffff;             /* 气泡填充 */
+  --wsp-stroke:#203170;             /* 气泡描边 */
+  --wsp-text:#536ba9;               /* 气泡文字 */
+  --wsp-hint:#9fb0d9;               /* 气泡小字 */
+  --wsp-menu-bg:rgba(255,255,255,.94);
+  --wsp-menu-line:rgba(32,49,112,.35);
+  --wsp-menu-text:#203170;
+}
+body.dark{
+  --wsp-bubble:#232946;
+  --wsp-stroke:#f98ec4;
+  --wsp-text:#e6e8f7;
+  --wsp-hint:#aab0cc;
+  --wsp-menu-bg:rgba(24,27,48,.94);
+  --wsp-menu-line:rgba(255,255,255,.22);
+  --wsp-menu-text:#e6e8f7;
+}
+
+/* ---- 挂件根节点 ----
+   pointer-events:none 是刻意的：命中判定由 JS 读图片 alpha 做，
+   鲸鱼透明区域的点击要能穿透到页面本身。 */
+.wsp-root{
+  position:fixed;left:0;bottom:0;
+  --wsp-scale:1.5;
+  --wsp-base:clamp(122px,calc(min(250px,min(100vw,100vh) * 0.28) * var(--wsp-scale)),625px);
+  width:var(--wsp-base);height:var(--wsp-base);
+  pointer-events:none;user-select:none;-webkit-user-select:none;
+  z-index:1150;font-family:inherit;
+  transition:left .16s ease,top .16s ease,transform .3s ease;
+}
+.wsp-root.wsp-hidden{display:none;}
+/* 吸附到左侧时整体水平镜像，鲸鱼朝内、气泡朝右 */
+.wsp-root.wsp-left{transform:scaleX(-1);}
+.wsp-root.wsp-dragging{transition:none;}
+
+/* 拖拽期间抑制浏览器手势 ----
+   手机上不加这条，触摸拖动会被浏览器当成页面滚动并发出 pointercancel，
+   拖拽被中途接管。只在按住期间生效，平时页面正常滚动。 */
+body.wsp-drag-lock{
+  touch-action:none;overscroll-behavior:none;
+  user-select:none;-webkit-user-select:none;
+}
+
+/* 按压 Q 弹：transform-origin 贴底，压扁时底边不动 */
+.wsp-body{
+  position:absolute;left:0;top:0;width:100%;height:100%;
+  transform-origin:50% 100%;
+  transition:transform .22s cubic-bezier(.34,1.56,.64,1);
+}
+.wsp-img{
+  position:absolute;right:0;bottom:0;width:59.45%;height:59.45%;
+  display:block;pointer-events:none;-webkit-user-drag:none;user-select:none;
+}
+
+/* ---- 气泡 ---- */
+.wsp-bubble{
+  position:absolute;left:0;top:0;width:100%;aspect-ratio:1026/700;
+  pointer-events:none;z-index:1;
+  --wsp-u:calc(var(--wsp-base) / 1026);
+}
+.wsp-bubble svg{display:block;width:100%;height:100%;pointer-events:none;}
+.wsp-bubble svg path,.wsp-bubble svg ellipse{pointer-events:none;cursor:pointer;}
+/* 气泡展开后才接收点击（收起时不挡页面） */
+.wsp-bubble.wsp-open svg path,.wsp-bubble.wsp-open svg ellipse{pointer-events:visiblePainted;}
+/* 主体与两个小圆点错开时序弹出，收起时反向 */
+.wsp-bubble .wsp-bshape,.wsp-bubble .wsp-b1,.wsp-bubble .wsp-b2{
+  opacity:0;transform:scale(.7);transform-box:fill-box;transform-origin:50% 50%;
+  transition:opacity .2s ease,transform .2s ease;
+  fill:var(--wsp-bubble);stroke:var(--wsp-stroke);
+}
+.wsp-bubble.wsp-open .wsp-bshape,.wsp-bubble.wsp-open .wsp-b1,.wsp-bubble.wsp-open .wsp-b2{opacity:1;transform:none;}
+.wsp-bubble.wsp-open .wsp-b2{transition-delay:0s;}
+.wsp-bubble.wsp-open .wsp-b1{transition-delay:.13s;}
+.wsp-bubble.wsp-open .wsp-bshape{transition-delay:.26s;}
+.wsp-bubble .wsp-bshape{transition-delay:.1s;}
+.wsp-bubble .wsp-b1{transition-delay:.2s;}
+.wsp-bubble .wsp-b2{transition-delay:.3s;}
+
+.wsp-gif{
+  position:absolute;left:44.25%;top:38%;transform:translate(-50%,-50%);
+  max-width:calc(var(--wsp-u) * 560);max-height:calc(var(--wsp-u) * 400);
+  display:none;opacity:0;transition:opacity .2s ease;
+  pointer-events:none;-webkit-user-drag:none;user-select:none;object-fit:contain;
+}
+/* 镜像时把 gif 再翻回来，否则图里的内容是反的 */
+.wsp-root.wsp-left .wsp-gif{transform:translate(-50%,-50%) scaleX(-1);}
+.wsp-bubble.wsp-open .wsp-gif{opacity:1;}
+
+.wsp-text{
+  position:absolute;left:44.25%;top:38%;transform:translate(-50%,-50%);
+  text-align:center;color:var(--wsp-text);line-height:1.15;white-space:nowrap;
+  pointer-events:none;opacity:0;transition:opacity .16s ease,transform .3s ease;
+}
+.wsp-bubble.wsp-open .wsp-text{opacity:1;transition:opacity .16s ease .36s,transform .3s ease;}
+.wsp-root.wsp-left .wsp-text{transform:translate(-50%,-50%) scaleX(-1);}
+.wsp-label{font-size:calc(var(--wsp-u) * 66);font-weight:600;letter-spacing:.06em;}
+.wsp-amount{font-size:calc(var(--wsp-u) * 128);font-weight:800;line-height:1.05;}
+.wsp-period{font-size:calc(var(--wsp-u) * 104);font-weight:800;line-height:1.05;}
+.wsp-wrap{white-space:normal;max-width:calc(var(--wsp-u) * 560);line-height:1.2;}
+.wsp-hint{
+  font-size:calc(var(--wsp-u) * 56);color:var(--wsp-hint);letter-spacing:.02em;
+  margin-top:calc(var(--wsp-u) * 9);min-height:calc(var(--wsp-u) * 64);line-height:1.15;
+}
+
+/* ---- 汉堡菜单按钮：悬停鲸鱼时出现 ---- */
+.wsp-menu-btn{
+  position:absolute;top:calc(40.55% + 4px);right:4px;
+  width:26px;height:26px;border:none;border-radius:6px;
+  background:var(--accent);cursor:pointer;pointer-events:auto;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:4px;padding:0;z-index:2;opacity:0;transition:opacity .15s ease;
+}
+.wsp-menu-btn.wsp-btn-show{opacity:1;}
+.wsp-menu-btn span{display:block;width:14px;height:2px;background:#fff;border-radius:1px;}
+.wsp-menu-btn:hover{background:var(--accent2);}
+/* 镜像时按钮本身翻回来，三条杠不受影响但保持点击区一致 */
+.wsp-root.wsp-left .wsp-menu-btn{transform:scaleX(-1);}
+
+/* ---- 菜单面板 ---- */
+.wsp-menu{
+  position:fixed;min-width:206px;
+  background:var(--wsp-menu-bg);border:1px solid var(--wsp-menu-line);
+  border-radius:12px;padding:10px 12px;
+  opacity:0;transform:scale(.92) translateY(-4px);transform-origin:top right;
+  transition:opacity .18s ease,transform .2s cubic-bezier(.34,1.56,.64,1);
+  pointer-events:none;z-index:1260;
+  box-shadow:0 6px 18px rgba(0,0,0,.18);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  user-select:none;-webkit-user-select:none;
+}
+.wsp-menu.wsp-menu-open{opacity:1;transform:scale(1) translateY(0);pointer-events:auto;}
+.wsp-menu-row{
+  display:flex;align-items:center;gap:8px;margin:5px 0;
+  color:var(--wsp-menu-text);font-size:12px;white-space:nowrap;
+}
+.wsp-range{flex:1;min-width:0;accent-color:var(--accent);}
+.wsp-number{
+  width:46px;border:1px solid var(--wsp-menu-line);border-radius:6px;
+  padding:2px 4px;font-size:12px;color:var(--wsp-menu-text);
+  background:var(--card-bg);box-sizing:border-box;
+}
+.wsp-number:disabled{opacity:.4;cursor:not-allowed;}
+.wsp-select{
+  flex:1;border:1px solid var(--wsp-menu-line);border-radius:6px;
+  background:var(--card-bg);color:var(--wsp-menu-text);
+  font-size:12px;padding:3px 4px;cursor:pointer;
+}
+.wsp-check{width:16px;height:16px;accent-color:var(--accent);cursor:pointer;flex:0 0 auto;}
+.wsp-sep{height:1px;background:var(--wsp-menu-line);margin:6px 0;}
+.wsp-pct{width:44px;text-align:right;color:var(--wsp-menu-text);font-size:12px;}
+.wsp-close{
+  width:100%;border:1px solid var(--wsp-menu-line);border-radius:8px;
+  padding:5px 0;font-size:12px;cursor:pointer;
+  background:transparent;color:var(--wsp-menu-text);
+}
+.wsp-close:hover{background:var(--accent);border-color:var(--accent);color:#fff;}
+
+/* ---- 窄屏适配 ----
+   手机上菜单可能撑出屏幕，且手指点 12px 的控件太小。
+   触摸目标按最小 32px 给，滑块加高。 */
+@media (max-width:600px){
+  .wsp-menu{
+    min-width:0;width:calc(100vw - 1.6rem);max-width:280px;
+    padding:12px 14px;
+  }
+  .wsp-menu-row{margin:9px 0;font-size:13px;gap:10px;}
+  .wsp-range{height:24px;}
+  .wsp-number{width:52px;padding:5px 6px;font-size:13px;}
+  .wsp-select{padding:6px 4px;font-size:13px;}
+  .wsp-check{width:20px;height:20px;}
+  .wsp-close{padding:9px 0;font-size:13px;}
+  /* 手机没有 hover，鲸鱼身上的汉堡键点不出来，直接隐藏；走侧栏设置入口 */
+  .wsp-menu-btn{display:none;}
+}

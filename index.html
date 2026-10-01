@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>xm486の小窝 | 个人技术博客 | 记录生命中的美好瞬间</title>
+<meta name="description" content="一个记录生活、技术和二次元爱好的个人博客">
+<!-- Favicon 多尺寸方案：桌面用 32×32 / 16×16，移动端和收藏用 128×128 -->
+<link rel="icon" type="image/png" sizes="32x32" href="image/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="image/favicon-16.png">
+<link rel="apple-touch-icon" sizes="128x128" href="image/favicon-128.png">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/whale.css">
+<link rel="stylesheet" href="css/comments.css">
+</head>
+<body>
+
+<!-- ================ 猫咪加载动画 ================ -->
+<div id="loading">
+  <div class="loading-title">Loading...</div>
+  <div class="cat">
+    <div class="body"></div>
+    <div class="head"><div class="face"></div></div>
+    <div class="foot">
+      <div class="tummy-end"></div><div class="bottom"></div>
+      <div class="legs left"></div><div class="legs right"></div>
+    </div>
+    <div class="paw">
+      <div class="hands left"></div><div class="hands right"></div>
+    </div>
+  </div>
+</div>
+
+<div id="container">
+
+  <!-- 背景纯图轮播（Ken Burns 放大，纯图无文字；增删图片只需增删 .item） -->
+  <div id="imgs">
+    <div class="item" style="background-image:url('/image/carousel/01.webp')"></div>
+    <div class="item" style="background-image:url('/image/carousel/02.webp')"></div>
+    <div class="item" style="background-image:url('/image/carousel/03.webp')"></div>
+    <div class="item" style="background-image:url('/image/carousel/04.webp')"></div>
+    <div class="item" style="background-image:url('/image/carousel/05.webp')"></div>
+    <div class="item" style="background-image:url('/image/carousel/06.webp')"></div>
+  </div>
+
+  <!-- 顶部导航 -->
+  <nav id="nav">
+    <a href="#top" class="logo">😽 <span>xm486</span>の小屋</a>
+    <div class="right">
+      <ul class="links" id="navLinks">
+        <li><a href="#about">关于我</a></li>
+        <li><a href="#articles">文章</a></li>
+        <li><a href="#friends">友链</a></li>
+        <li><a href="#contact">联系我</a></li>
+      </ul>
+      <button id="themeToggle" title="切换日/夜模式" aria-label="切换主题">
+        <span class="ic sun">☀️</span>
+        <span class="ic moon">🌙</span>
+      </button>
+      <button class="menu-btn" id="menuBtn" aria-label="展开菜单">☰</button>
+    </div>
+  </nav>
+
+  <!-- 品牌标题（浮在整个背景图上方） -->
+  <header id="header">
+    <div id="brand">
+      <div class="small">Nagisa no Oka · 青春の記録</div>
+      <div class="artboard" style="font-size:38px;">❄️<span>xm486</span>の小屋</div>
+      <div class="title">记录代码 · 生活 · 二次元的点滴</div>
+      <div class="meta">
+        <span>全栈开发者</span><span class="dot"></span>
+        <span>二次元爱好者</span><span class="dot"></span>
+        <span>Agent重度依赖♡</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- 波浪动画层（衔接背景图与内容区） -->
+  <div id="waves">
+    <svg class="waves" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 24 150 28" preserveAspectRatio="none" shape-rendering="auto">
+      <defs>
+        <path id="gentle-wave" d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z"/>
+      </defs>
+      <g class="parallax">
+        <use xlink:href="#gentle-wave" x="48" y="0"/>
+        <use xlink:href="#gentle-wave" x="48" y="3"/>
+        <use xlink:href="#gentle-wave" x="48" y="5"/>
+        <use xlink:href="#gentle-wave" x="48" y="7"/>
+      </g>
+    </svg>
+  </div>
+
+  <!-- 主内容区 -->
+  <main>
+    <div class="inner">
+
+      <!-- 置顶文章 -->
+      <div class="block-title tight reveal"><span class="jp">置頂文章</span><h2>置顶<span>文章</span></h2></div>
+      <div class="segments">
+        <article class="item reveal">
+          <div class="cover" style="background-image:url('https://images.unsplash.com/photo-1578632767115-351597cf2477?w=800&q=80')"></div>
+          <div class="info">
+            <h3>2026 年度追番计划 &amp; 推荐清单</h3>
+            <p class="excerpt">盘点本季度值得一看的新番与神作，从热血番到治愈系，这份清单拯救你的剧荒时光！...</p>
+            <div class="meta"><span>📅 2025-02-28</span><a class="btn" href="posts/article-template.html">阅读全文 →</a></div>
+          </div>
+        </article>
+      </div>
+
+      <!-- 关于我 -->
+      <div class="block-title reveal" id="about"><span class="jp">About Me</span><h2>关于<span>我</span></h2></div>
+      <div class="about-grid reveal">
+        <div class="avatar-wrap">
+          <img class="avatar" src="image/avatar.jpg" alt="xm486 的头像">
+        </div>
+        <div class="about-info">
+          <h3>小米486</h3>
+          <div class="role">💻 全栈开发 · 二次元爱好者 · AI重度依赖♡</div>
+          <p class="bio">你好，欢迎来到我的博客，我是小米486，一名普普通通的二次元爱好者，开发只是兴趣使然，今后会在这里分享我的游戏收获，或者项目记录，以及美好生活的瞬间</p>
+          <div class="about-meta">
+            <div class="meta-item"><div class="label">😺 身份</div><div class="value">夜之国/神枪手</div></div>
+            <div class="meta-item"><div class="label">🌏 所在地</div><div class="value">五彩斑斓的世界</div></div>
+            <div class="meta-item"><div class="label">⭐ 兴趣</div><div class="value">编程 · 二次元 · 视觉小说</div></div>
+            <div class="meta-item"><div class="label">💡 愿景</div><div class="value">技术宅改变世界!</div></div>
+          </div>
+
+          <!-- 项目展示：每个项目只保留一份，JS 会自动复制一组实现无缝滚动 -->
+          <div class="showcase-block" aria-label="项目展示">
+          <div class="showcase-label">
+            <span>Projects</span><b>个人项目展示</b>
+            <!-- 展开全部：面板内容由 JS 从下面的项目按钮读取，不用重复维护数据 -->
+              <button type="button" class="showcase-more" id="btnAllProjects" aria-expanded="false" aria-controls="allProjects">
+                <span class="sm-text">查看全部</span>
+                <span class="sm-count" id="projectCount"></span>
+                <svg class="sm-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+              </button>
+            </div>
+
+            <!-- 全部项目面板：默认收起 -->
+            <div class="all-projects" id="allProjects" hidden>
+              <div class="ap-grid" id="allProjectsGrid"></div>
+            </div>
+
+            <div class="avatar-scroll-container project-scroll">
+              <div class="avatar-row">
+                <div class="marquee-track marquee-left">
+                  <!-- 替换 href、src 与 data-name 即可新增/修改项目 -->
+                  <button class="scroll-avatar project-item" type="button" data-name="Gal工具箱" data-avatar="image/project/galtoolbox.webp" data-desc="一款Android端的Gal工具箱，可以方便快捷的查找自己想要的游戏资源" data-site="https://xm486.github.io" data-repo="https://github.com/xm486/Galtoolbox-for-Android" aria-label="查看 GitHub 主页详情"><img src="image/project/galtoolbox.webp" alt="GitHub 主页"></button>
+                  <button class="scroll-avatar project-item" type="button" data-name="次元音乐" data-avatar="image/project/ciyuanmusic.webp" data-desc="一款二次元风格的音乐轻量PWA应用，同时也有网页端，不过现在由于服务器和api接口限制，基本不再维护。" data-site="https://xm486.kesug.com" data-repo="https://github.com/xm486/ciyuan-music" aria-label="查看 GitHub 项目详情"><img src="image/project/ciyuanmusic.webp" alt="GitCode 项目"></button>
+                  <button class="scroll-avatar project-item" type="button" data-name="YukiHub" data-avatar="image/project/yukihub.webp" data-desc="一款移动端的Galgame/视觉小说管理工具，并支持部分模拟器的直启动，更有丰富的社交功能。" data-site="https://yukihub.zh.kg" data-repo="https://gitcode.com/xm486/yukihub" aria-label="查看 GitHub 项目详情"><img src="image/project/yukihub.webp" alt="GitCode 项目"></button>
+                  <button class="scroll-avatar project-item" type="button" data-name="DevPetM" data-avatar="image/project/devpetm.webp" data-desc="一款Android移动端的Ai Coding宠物，支持Operit，Rikkahub，OpenCode等ai平台使用。" data-repo="https://gitcode.com/xm486/devpetm" aria-label="查看 GitHub 项目详情"><img src="image/project/devpetm.webp" alt="GitCode 项目"></button>
+                  <button class="scroll-avatar project-item" type="button" data-name="xm486の博客模板" data-avatar="image/favicon-128.png" data-desc="本站使用的静态文章详情页模板，包含标题、目录、代码块和日夜主题样式。" data-site="posts/article-template.html" data-repo="https://github.com" aria-label="查看博客文章模板详情"><img src="image/favicon-128.png" alt="博客文章模板"></button>
+                </div>
+              </div>
+              <div class="avatar-row">
+                <div class="marquee-track marquee-right">
+                  <button class="scroll-avatar project-item" type="button" data-name="Deepseek-whale-web-widget" data-avatar="image/project/deepseek-whale-web-widget.webp" data-desc="基于原DSH 小鲸鱼余额挂件（DeepSeek Balance Whale Widget）做的网页版的DS小鲸鱼挂件，自用顺便就开源了，也就是本博客现在用的这个，当作吉祥物很可爱喵" data-repo="https://gitcode.com/xm486/deepseek-whale-web-widget" aria-label="查看 GitHub 主页详情"><img src="image/project/deepseek-whale-web-widget.webp" alt="GitHub 主页"></button>
+                  <button class="scroll-avatar project-item" type="button" data-name="次元音乐" data-avatar="image/project/ciyuanmusic.webp" data-desc="一款二次元风格的音乐轻量PWA应用，同时也有网页端，不过现在由于服务器和api接口限制，基本不再维护。" data-site="https://xm486.kesug.com" data-repo="https://github.com/xm486/ciyuan-music" aria-label="查看 GitHub 项目详情"><img src="image/project/ciyuanmusic.webp" alt="GitCode 项目"></button>
+                  <button class="scroll-avatar project-item" type="button" data-name="YukiHub" data-avatar="image/project/yukihub.webp" data-desc="一款移动端的Galgame/视觉小说管理工具，并支持部分模拟器的直启动，更有丰富的社交功能。" data-site="https://yukihub.zh.kg" data-repo="https://gitcode.com/xm486/yukihub" aria-label="查看 GitHub 项目详情"><img src="image/project/yukihub.webp" alt="GitCode 项目"></button>
+                  <button class="scroll-avatar project-item" type="button" data-name="DevPetM" data-avatar="image/project/devpetm.webp" data-desc="一款Android移动端的Ai Coding宠物，支持Operit，Rikkahub，OpenCode等ai平台使用。" data-repo="https://gitcode.com/xm486/devpetm" aria-label="查看 GitHub 项目详情"><img src="image/project/devpetm.webp" alt="GitCode 项目"></button>
+                  <button class="scroll-avatar project-item" type="button" data-name="xm486の博客模板" data-avatar="image/favicon-128.png" data-desc="本站使用的静态文章详情页模板，包含标题、目录、代码块和日夜主题样式。" data-site="posts/article-template.html" data-repo="https://github.com" aria-label="查看博客文章模板详情"><img src="image/favicon-128.png" alt="博客文章模板"></button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="social-links">
+            <a class="social-btn bili" href="https://b23.tv/7wWROCQ" target="_blank" rel="noopener">
+              <img class="social-icon" src="image/bilibili.webp" alt="" aria-hidden="true">Bilibili
+            </a>
+            <a class="social-btn github" href="https://github.com/xm486" target="_blank" rel="noopener">
+              <svg class="social-icon github-icon" viewBox="0 0 512 512" aria-hidden="true"><path d="M256 70.7c-102.6 0-185.9 83.2-185.9 185.9 0 82.1 53.3 151.8 127.1 176.4 9.3 1.7 12.3-4 12.3-8.9V389.4c-51.7 11.3-62.5-21.9-62.5-21.9 -8.4-21.5-20.6-27.2-20.6-27.2 -16.9-11.5 1.3-11.3 1.3-11.3 18.7 1.3 28.5 19.2 28.5 19.2 16.6 28.4 43.5 20.2 54.1 15.4 1.7-12 6.5-20.2 11.8-24.9 -41.3-4.7-84.7-20.6-84.7-91.9 0-20.3 7.3-36.9 19.2-49.9 -1.9-4.7-8.3-23.6 1.8-49.2 0 0 15.6-5 51.1 19.1 14.8-4.1 30.7-6.2 46.5-6.3 15.8.1 31.7 2.1 46.6 6.3 35.5-24 51.1-19.1 51.1-19.1 10.1 25.6 3.8 44.5 1.8 49.2 11.9 13 19.1 29.6 19.1 49.9 0 71.4-43.5 87.1-84.9 91.7 6.7 5.8 12.8 17.1 12.8 34.4 0 24.9 0 44.9 0 51 0 4.9 3 10.7 12.4 8.9 73.8-24.6 127-94.3 127-176.4C441.9 153.9 358.6 70.7 256 70.7z"/></svg>GitHub
+            </a>
+            <a class="social-btn gitcode" href="https://gitcode.com/xm486" target="_blank" rel="noopener">
+              <img class="social-icon" src="image/gitcode.webp" alt="" aria-hidden="true">GitCode
+            </a>
+            <a class="social-btn bili" href="https://bgm.tv/user/a1746848318" target="_blank" rel="noopener">
+              <img class="social-icon" src="image/bangumi.webp" alt="" aria-hidden="true">Bangumi
+            </a>
+            <a class="social-btn mail" href="mailto:xiaomi486@qq.com">
+              <svg class="social-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v14H3V5Zm2 2v.5l7 4.7 7-4.7V7l-7 4.7L5 7Z"/></svg>邮箱
+            </a>
+            <a class="social-btn project" href="https://github.com" target="_blank" rel="noopener">
+              <svg class="social-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/></svg>本项目
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- 文章列表 -->
+      <div class="block-title reveal" id="articles"><span class="jp">Blog</span><h2>我的<span>文章</span></h2></div>
+      <div class="blog-toolbar reveal">
+        <button class="cat-btn active" data-filter="all">全部</button>
+        <button class="cat-btn" data-filter="tech">💻 技术</button>
+        <button class="cat-btn" data-filter="life">✍️ 生活</button>
+        <button class="cat-btn" data-filter="acg">🌸 二次元</button>
+        <button class="cat-btn" data-filter="hanhua">🎮 个人汉化</button>
+      </div>
+
+      <div class="articles-grid" id="articlesGrid">
+      
+      <article class="post-card reveal" data-cat="hanhua">
+  <div class="post-thumb" style="background-image:url('image/post/3/fm.webp')">
+    <span class="cat-badge">个人汉化</span>
+  </div>
+  <div class="post-body">
+    <h3 class="post-title">【汉化】安卓-《Muv-Luv Alternative REMASTERED》 汉化发布</h3>
+    <p class="post-excerpt">Muv-Luv Alternative REMASTERED 安卓版  汉化发布</p>
+    <div class="post-meta">
+      <span>📅 2026-09-20</span>
+      <a class="read-more" href="posts/muvluv_al_chs.html">阅读全文 →</a>
+    </div>
+  </div>
+</article>
+      
+      <article class="post-card reveal" data-cat="hanhua">
+  <div class="post-thumb" style="background-image:url('image/post/2/fm.webp')">
+    <span class="cat-badge">个人汉化</span>
+  </div>
+  <div class="post-body">
+    <h3 class="post-title">【汉化】安卓-《Muv-Luv REMASTERED》 ai汉化发布</h3>
+    <p class="post-excerpt">Muv-Luv REMASTERED安卓版 ai汉化发布</p>
+    <div class="post-meta">
+      <span>📅 2026-09-17</span>
+      <a class="read-more" href="posts/muvluv汉化.html">阅读全文 →</a>
+    </div>
+  </div>
+</article>
+      
+      <article class="post-card reveal" data-cat="tech">
+  <div class="post-thumb" style="background-image:url('image/post/1/feiai.webp')">
+    <span class="cat-badge">技术</span>
+  </div>
+  <div class="post-body">
+    <h3 class="post-title">如何搭建第一个网站</h3>
+    <p class="post-excerpt">介绍了我对搭建一个网站的一些建议和个人理解</p>
+    <div class="post-meta">
+      <span>📅 2026-09-06</span>
+      <a class="read-more" href="posts/first-website.html">阅读全文 →</a>
+    </div>
+  </div>
+</article>
+
+        <article class="post-card reveal" data-cat="acg">
+          <div class="post-thumb" style="background-image:url('https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=800&q=80')"><span class="cat-badge">二次元</span></div>
+          <div class="post-body">
+            <h3 class="post-title">手办收藏初体验：入坑指南与避坑建议</h3>
+            <p class="post-excerpt">从预算规划到购买渠道，从预订到开箱，一位手办萌新的完整入坑历程分享与实用经验总结...</p>
+            <div class="post-meta"><span>📅 2024-12-05</span><a class="read-more" href="posts/article-template.html">阅读全文 →</a></div>
+          </div>
+        </article>
+
+      </div>
+
+      <!-- 友情链接 -->
+      <div class="block-title reveal" id="friends"><span class="jp">Friends</span><h2>友情<span>链接</span></h2></div>
+      
+      <!-- 友链头像滚动展示：数据与上面的项目展示相互独立 -->
+      <div class="showcase-block friends-showcase reveal" aria-label="友链滚动展示">
+        <div class="showcase-label"><span>Friends</span><b>友链展示</b></div>
+        <div class="avatar-scroll-container">
+          <div class="avatar-row">
+            <div class="marquee-track marquee-left">
+              <a class="scroll-avatar" href="https://www.kun.moe/" target="_blank" rel="noopener" data-name="鲲的博客" aria-label="鲲的博客"><img src="https://www.kun.moe/avatar.webp" alt="鲲的博客"></a>
+              <a class="scroll-avatar" href="https://www.lunarain.top/" target="_blank" rel="noopener" data-name="LunaRain_079's Inn" aria-label="LunaRain_079's Inn"><img src="https://www.lunarain.top/avatar.jpg" alt="LunaRain_079's Inn"></a>
+              <a class="scroll-avatar" href="https://notes.kiramux.com/" target="_blank" rel="noopener" data-name="Kiramux" aria-label="Kiramux"><img src="image/saya.webp" alt="Kiramux"></a>
+              <a class="scroll-avatar" href="https://huoshen80.top" target="_blank" rel="noopener" data-name="火神80的小窝" aria-label="火神80的小窝"><img src="https://huoshen80.top/favicon.ico" alt="火神80的小窝"></a>
+            </div>
+          </div>
+          <div class="avatar-row">
+            <div class="marquee-track marquee-right">
+              <a class="scroll-avatar" href="https://www.yukin0a.com" target="_blank" rel="noopener" data-name="Yukin0a" aria-label="Yukin0a"><img src="https://www.yukin0a.com/image/friend.png" alt="Yukin0a"></a>
+              <a class="scroll-avatar" href="https://gcross.pages.dev/" target="_blank" rel="noopener" data-name="GCross's Blog" aria-label="GCross's Blog"><img src="https://gcross.pages.dev/favicon/favicon-192.png" alt="GCross's Blog"></a>
+              <a class="scroll-avatar" href="#" data-name="待添加友链" aria-label="待添加友链"><span class="scroll-placeholder">🎨</span></a>
+              <a class="scroll-avatar" href="#" data-name="待添加友链" aria-label="待添加友链"><span class="scroll-placeholder">🌙</span></a>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="friends-grid reveal">
+
+        <a class="friend-card" href="https://www.kun.moe/" target="_blank" rel="noopener">
+          <img class="friend-avatar" src="https://www.kun.moe/avatar.webp" alt="" aria-hidden="true">
+          <div class="friend-info">
+            <div class="friend-name">鲲的博客</div>
+            <div class="friend-desc">鲲老大，绝对的高手!</div>
+          </div>
+        </a>
+
+        <a class="friend-card" href="https://www.lunarain.top/" rel="noopener">
+          <img class="friend-avatar" src="https://www.lunarain.top/avatar.jpg" alt="" aria-hidden="true">
+          <div class="friend-info">
+            <div class="friend-name">LunaRain_079's Inn</div>
+            <div class="friend-desc">暂伴月将影 行乐须及春</div>
+          </div>
+        </a>
+        
+        <a class="friend-card" href="https://notes.kiramux.com/" rel="noopener">
+          <img class="friend-avatar" src="image/saya.webp" alt="" aria-hidden="true">
+          <div class="friend-info">
+            <div class="friend-name">Kiramux</div>
+            <div class="friend-desc">Saya的博客，绘画高手，同时也是月谣，OtoAme的站长</div>
+          </div>
+        </a>
+        
+        <a class="friend-card" href="https://huoshen80.top" rel="noopener">
+          <img class="friend-avatar" src="https://huoshen80.top/favicon.ico" alt="" aria-hidden="true">
+          <div class="friend-info">
+            <div class="friend-name">火神80的小窝</div>
+            <div class="friend-desc">一位热爱 Coding、MC、原神、galgame 的b站up主......</div>
+          </div>
+        </a>
+        
+        <a class="friend-card" href="https://www.yukin0a.com" rel="noopener">
+          <img class="friend-avatar" src="https://www.yukin0a.com/image/friend.png" alt="" aria-hidden="true">
+          <div class="friend-info">
+            <div class="friend-name">Yukin0a</div>
+            <div class="friend-desc">这是一个名叫Yukin0a的鸽子喵~</div>
+          </div>
+        </a>
+        
+        <a class="friend-card" href="https://gcross.pages.dev/" rel="noopener">
+          <img class="friend-avatar" src="https://gcross.pages.dev/favicon/favicon-192.png" alt="" aria-hidden="true">
+          <div class="friend-info">
+            <div class="friend-name">GCross's Blog</div>
+            <div class="friend-desc">川哥我还记得你，星之库最强战神😭</div>
+          </div>
+        </a>
+
+      </div>
+
+      
+
+      <div class="friends-action reveal">
+        <button class="friends-apply-btn" id="openApplyBtn" aria-label="打开友链申请说明">
+          💌 想添加友链？
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- 项目详情弹窗：内容由点击的 .project-item 数据属性填充 -->
+  <div class="modal-overlay" id="projectModal" aria-hidden="true">
+    <div class="modal-content project-modal-content" role="dialog" aria-labelledby="projectModalTitle" aria-modal="true">
+      <button class="modal-close" id="closeProjectBtn" aria-label="关闭项目详情">✕</button>
+      <div class="project-modal-head">
+        <div class="project-modal-avatar" id="projectModalAvatar"><span>✦</span></div>
+        <div>
+          <span class="project-modal-kicker">Project Details</span>
+          <h3 id="projectModalTitle">项目名称</h3>
+        </div>
+      </div>
+      <p class="project-modal-desc" id="projectModalDesc"></p>
+      <div class="project-modal-links">
+        <a class="project-detail-link site-link" id="projectSiteLink" href="#" target="_blank" rel="noopener">↗ 项目地址</a>
+        <a class="project-detail-link repo-link" id="projectRepoLink" href="#" target="_blank" rel="noopener">⌘ 仓库地址</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 友链申请弹窗 -->
+  <div class="modal-overlay" id="applyModal" aria-hidden="true">
+    <div class="modal-content" role="dialog" aria-labelledby="modalTitle" aria-modal="true">
+      <button class="modal-close" id="closeApplyBtn" aria-label="关闭弹窗">✕</button>
+      <h3 id="modalTitle">友链申请</h3>
+      <p class="modal-lead">想交换友链的话，请按下面格式发到邮箱
+        <a href="mailto:xiaomi486@qq.com?subject=%E5%8F%8B%E9%93%BE%E7%94%B3%E8%AF%B7&amp;body=%E7%BD%91%E7%AB%99%E5%90%8D%E7%A7%B0%EF%BC%9A%0A%E7%BD%91%E7%AB%99%E5%9C%B0%E5%9D%80%EF%BC%9A%0A%E7%BD%91%E7%AB%99%E7%AE%80%E4%BB%8B%EF%BC%9A%0A%E7%BD%91%E7%AB%99%E5%A4%B4%E5%83%8F%EF%BC%9A%0A">xiaomi486@qq.com</a>
+        ，审核通过后会加上。
+      </p>
+      <pre class="modal-tpl">网站名称：
+网站地址：
+网站简介：
+网站头像：</pre>
+      <p class="modal-note">头像请给可直接访问的图片链接（建议正方形）。欢迎互链，站点失效或违规内容会随时撤下。</p>
+    </div>
+  </div>
+
+  <!-- 联系我 -->
+  <div id="contact">
+    <div class="block-title tight"><span class="jp">Contact</span><h2>联系<span>我</span></h2></div>
+    <div class="social-links center">
+      <a class="social-btn bili" href="https://b23.tv/7wWROCQ" target="_blank" rel="noopener"><img class="social-icon" src="image/bilibili.webp" alt="" aria-hidden="true">Bilibili</a>
+      <a class="social-btn github" href="https://github.com/xm486" target="_blank" rel="noopener"><svg class="social-icon github-icon" viewBox="0 0 512 512" aria-hidden="true"><path d="M256 70.7c-102.6 0-185.9 83.2-185.9 185.9 0 82.1 53.3 151.8 127.1 176.4 9.3 1.7 12.3-4 12.3-8.9V389.4c-51.7 11.3-62.5-21.9-62.5-21.9 -8.4-21.5-20.6-27.2-20.6-27.2 -16.9-11.5 1.3-11.3 1.3-11.3 18.7 1.3 28.5 19.2 28.5 19.2 16.6 28.4 43.5 20.2 54.1 15.4 1.7-12 6.5-20.2 11.8-24.9 -41.3-4.7-84.7-20.6-84.7-91.9 0-20.3 7.3-36.9 19.2-49.9 -1.9-4.7-8.3-23.6 1.8-49.2 0 0 15.6-5 51.1 19.1 14.8-4.1 30.7-6.2 46.5-6.3 15.8.1 31.7 2.1 46.6 6.3 35.5-24 51.1-19.1 51.1-19.1 10.1 25.6 3.8 44.5 1.8 49.2 11.9 13 19.1 29.6 19.1 49.9 0 71.4-43.5 87.1-84.9 91.7 6.7 5.8 12.8 17.1 12.8 34.4 0 24.9 0 44.9 0 51 0 4.9 3 10.7 12.4 8.9 73.8-24.6 127-94.3 127-176.4C441.9 153.9 358.6 70.7 256 70.7z"/></svg>GitHub</a>
+      <a class="social-btn gitcode" href="https://gitcode.com/xm486" target="_blank" rel="noopener"><img class="social-icon" src="image/gitcode.webp" alt="" aria-hidden="true">GitCode</a>
+      <a class="social-btn mail" href="mailto:xiaomi486@qq.com"><svg class="social-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v14H3V5Zm2 2v.5l7 4.7 7-4.7V7l-7 4.7L5 7Z"/></svg>xiaomi486@qq.com</a>
+    </div>
+  </div>
+
+  <!-- 评论区：与文章页共用同一套自绘组件，page-key 自动取 / 即首页 -->
+  <div class="index-comments">
+    <div id="flm-comment-widget" data-site="" data-page-key="" data-title=""></div>
+  </div>
+
+  <!-- 页脚 -->
+  <footer>
+    <div class="ft-logo">❄️ <span>xm486</span>の小屋</div>
+    <p class="icp">
+      <a href="https://icp.gov.moe/?keyword=20260487" target="_blank" rel="noopener"><img class="icp-icon" src="https://icp.gov.moe/images/gov.svg" alt="" width="14" height="14" loading="lazy">萌ICP备20260487号</a>
+      <span class="icp-sep">·</span>
+      <a href="https://fakeicp.top/query.html?number=1202637" target="_blank" rel="noopener">假ICP备1202637号</a>
+    </p>
+    <p class="credits">
+      主题设计参考 <a href="https://github.com/amehime/hexo-theme-shoka" target="_blank" rel="noopener">Shoka</a>
+    </p>
+    <p class="credits">
+      点击特效来自 <a href="https://github.com/CialloKing/ba-click-fx" target="_blank" rel="noopener">ba-click-fx</a>
+    </p>
+    <!-- 访问量统计：假ICP备 widget.js 纯数据绑定。
+         它靠 currentScript.previousElementSibling 找容器，
+         所以 script 标签必须紧跟在 .flm-pv-widget 后面，中间不能插东西。
+         折线图放进 <details> 折叠，默认收起，不占页脚版面 -->
+    <div class="flm-pv-widget pv-box">
+      <details class="pv-fold">
+        <summary>
+          <span class="pv-item">今日访问 <b id="flm-pv-today">--</b></span>
+          <span class="pv-sep">·</span>
+          <span class="pv-item">总访问 <b id="flm-pv-total">--</b></span>
+          <span class="pv-caret" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+          </span>
+        </summary>
+        <div id="flm-pv-chart" class="pv-chart" aria-label="近 30 天访问趋势"></div>
+        <span class="pv-hint">近 30 天访问趋势</span>
+      </details>
+    </div>
+    <script src="https://fakeicp.top/widget.js" data-site="xm486.zh.kg" async></script>
+    <p class="runtime">本站已稳定运行 <span id="runtime">--</span></p>
+
+    <p>© 2026 Snow Flakes · 用热爱与代码构筑的小小世界</p>
+  </footer>
+
+</div>
+
+<!-- 侧边工具栏：音乐播放器 + 回到顶部（结构参照 Shoka 的 #tool） -->
+<div id="tool">
+  <audio class="player-audio" preload="none"></audio>
+  <button type="button" class="item tool-music" aria-label="音乐播放器" title="音乐播放器">
+    <svg class="tool-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/>
+      <circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/>
+      <path d="M12 12l7 6"/>
+    </svg>
+  </button>
+  <button type="button" class="item tool-whale" aria-label="隐藏网站精灵" title="隐藏网站精灵">
+    <svg class="tool-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 14c2.2 0 3-1.4 5-1.4s2.8 1.4 5 1.4 3-1.4 5-1.4"/>
+      <path d="M6.5 12.2C6.5 8.6 9 6 12.5 6c3.2 0 5.5 2.1 5.5 5 0 .5-.1 1-.2 1.4"/>
+      <circle cx="10" cy="9.4" r="1" fill="currentColor" stroke="none"/>
+      <path d="M15.5 4.4c.9.3 1.6 1 2 1.9"/>
+    </svg>
+  </button>
+  <button type="button" class="item tool-whale-set" aria-label="精灵设置" title="精灵设置">
+    <svg class="tool-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>
+    </svg>
+  </button>
+  <button type="button" class="item back-to-top" aria-label="回到顶部" title="回到顶部">
+    <svg class="tool-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 19V5M5 12l7-7 7 7"/>
+    </svg>
+    <span class="percent">0%</span>
+  </button>
+</div>
+
+<!-- 播放器面板：曲目列表由 js/main.js 从云端歌单拉取后写入；
+     想固定几首本地的，也可以直接在下面的 ul 里按 li 的格式加行 -->
+<div id="playerInfo" class="player-info" role="region" aria-label="音乐播放器">
+  <div class="player-preview">
+    <div class="player-cover">
+      <div class="player-disc"><img class="pi-cover" alt="" aria-hidden="true"></div>
+    </div>
+    <div class="player-meta">
+      <h4 class="pi-title">未选择曲目</h4>
+      <span class="pi-artist"></span>
+    </div>
+  </div>
+  <div class="player-controls">
+    <button type="button" class="btn pc-mode" aria-label="播放模式">🔁</button>
+    <button type="button" class="btn pc-prev" aria-label="上一首">⏮</button>
+    <button type="button" class="btn pc-play" aria-label="播放">▶</button>
+    <button type="button" class="btn pc-next" aria-label="下一首">⏭</button>
+    <button type="button" class="btn pc-volume" aria-label="静音">🔊</button>
+  </div>
+  <!-- 由云端歌单填充；两个失效的静态曲目已删除（链接过期放不出声） -->
+  <ul class="player-list"></ul>
+</div>
+
+<script src="js/main.js"></script>
+<script src="js/whale.js"></script>
+<!-- 评分评论：自绘组件基于 comment-sdk.js（无 UI 核心 SDK），页面参数自动填充 -->
+<script>
+  (function () {
+    var el = document.getElementById('flm-comment-widget');
+    if (!el) return;
+    el.setAttribute('data-site', location.hostname || 'localhost');
+    el.setAttribute('data-page-key', location.pathname.replace(/\.html?$/, '').replace(/\/+$/, '') || '/');
+    el.setAttribute('data-title', document.title || '');
+  })();
+</script>
+<script src="https://fakeicp.top/comment-sdk.js"></script>
+<script src="js/comments.js"></script>
+<!-- 点击 / 拖尾特效：ba-click-fx (MIT, CialloKing)，ESM 模块需独立 script -->
+<script type="module">
+  import { BAClickFX } from 'https://cdn.jsdelivr.net/npm/ba-click-fx@1.3.1/dist/ba-click-fx.js';
+
+  // 不传 target：让库自行创建并管理覆盖层 canvas 的挂载与尺寸
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    new BAClickFX({
+      // pan-y：纵向滚动交给浏览器，横向滑动保留完整拖尾。
+      // 不用 'auto'：浏览器接管手势后会发 pointercancel，拖尾会被中止。
+      // 也不改成手动喂坐标：滚动期间浏览器会节流 touchmove，样本稀疏会让轨迹断裂。
+      touchAction: 'pan-y',
+      // maxDpr 保持库默认的 1。桌面窗口面积大，提到 2 会让渲染像素翻 4 倍导致卡顿。
+    });
+  }
+</script>
+</body>
+</html>

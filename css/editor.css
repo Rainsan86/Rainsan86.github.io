@@ -1,0 +1,323 @@
+/* ============================================================
+   文章编辑器样式
+   编辑器外壳自成一套；正文区通过 .article-content 继承 style.css，
+   所以可视化面板里看到的排版与导出成品完全一致。
+   ============================================================ */
+
+.editor-page{min-height:100vh;background:var(--gui-bg);padding:5rem 1.5rem 3rem;}
+.editor-shell{max-width:1180px;margin:0 auto;}
+
+/* 顶部说明 */
+.editor-intro{
+  background:var(--card-bg);border:1px solid var(--line);border-radius:14px;
+  padding:.9rem 1.1rem;margin-bottom:1.1rem;
+  color:var(--text-soft);font-size:.84rem;line-height:1.75;
+}
+.editor-intro b{color:var(--text-main);}
+.editor-intro code,.export-box code,.img-notice code{
+  padding:.12rem .35rem;border-radius:4px;background:var(--c2);color:var(--accent);
+  font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.9em;
+}
+
+/* ---- 文章信息表单 ---- */
+.editor-fields{
+  background:var(--card-bg);border:1px solid var(--line);border-radius:16px;
+  padding:1.2rem;margin-bottom:1rem;box-shadow:var(--card-shadow);
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:.9rem;
+}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0;}
+.field.wide{grid-column:1/-1;}
+.field label{font-size:.78rem;font-weight:700;color:var(--text-main);}
+.field .hint{font-size:.7rem;color:var(--muted);font-weight:400;}
+.field input,.field select,.field textarea{
+  width:100%;padding:.55rem .7rem;
+  background:var(--c1);color:var(--card-text);
+  border:1px solid var(--line);border-radius:9px;
+  font-family:inherit;font-size:.86rem;
+  transition:border-color .2s,box-shadow .2s;
+}
+.field input:focus,.field select:focus,.field textarea:focus{
+  outline:none;border-color:var(--accent2);box-shadow:0 0 0 3px rgba(248,130,194,.15);
+}
+.field textarea{resize:vertical;min-height:58px;line-height:1.6;}
+/* 输入框 + 旁边的选图按钮 */
+.input-row{display:flex;gap:.5rem;align-items:stretch;}
+.input-row input{flex:1;min-width:0;}
+.input-row .act-btn{flex:0 0 auto;white-space:nowrap;}
+
+/* 本地图片提醒条 */
+.img-notice{
+  display:none;margin-bottom:1rem;padding:.7rem 1rem;
+  background:rgba(248,130,194,.1);border:1px dashed var(--accent2);border-radius:12px;
+  color:var(--text-soft);font-size:.8rem;line-height:1.7;
+}
+.img-notice.show{display:block;}
+.img-notice b{color:var(--accent);}
+
+/* ---- 编辑卡片 ----
+   注意：这里不能用 overflow:hidden。带 overflow 的祖先会成为
+   sticky 的滚动容器，导致下面工具栏的吸顶失效。 */
+.editor-card{
+  background:var(--card-bg);border:1px solid var(--line);border-radius:16px;
+  box-shadow:var(--card-shadow);
+}
+/* ---- 吸顶头部：标签栏 + 工具栏整体固定 ----
+   包成一个 sticky 容器而非各自 sticky：
+   移动端标签栏会换行导致高度变化，分别设 top 值会算错而重叠。 */
+.editor-head{
+  position:sticky;top:3.5rem;z-index:20;
+  background:var(--card-bg);border-radius:16px 16px 0 0;
+  /* 吸顶时给一点投影，与下方正文区分开 */
+  box-shadow:0 2px 10px rgba(51,58,92,.06);
+}
+.editor-tabs{
+  display:flex;align-items:center;gap:.2rem;
+  padding:0 1rem;border-bottom:1px solid var(--line);
+  border-radius:16px 16px 0 0;
+}
+.tab-btn{
+  position:relative;padding:.85rem 1rem;
+  background:none;border:none;cursor:pointer;
+  color:var(--text-soft);font-size:.9rem;font-weight:700;font-family:inherit;
+  transition:color .2s;
+}
+.tab-btn:hover{color:var(--text-main);}
+.tab-btn.active{color:var(--accent);}
+/* 底部指示条用 scaleX 过渡，切换时有滑动感 */
+.tab-btn::after{
+  content:'';position:absolute;left:1rem;right:1rem;bottom:0;
+  height:2px;border-radius:2px;background:var(--accent);
+  transform:scaleX(0);transition:transform .25s cubic-bezier(.2,.8,.2,1);
+}
+.tab-btn.active::after{transform:scaleX(1);}
+
+.editor-actions{margin-left:auto;display:flex;gap:.5rem;padding:.5rem 0;}
+/* ---- 写作状态栏：字数 / 阅读时长 / 保存状态 ----
+   放在吸顶头部最下面一行，写长文时也能一直看到 */
+.editor-stats{
+  display:flex;align-items:center;gap:.45rem;
+  padding:.4rem 1rem .55rem;
+  color:var(--muted);font-size:.74rem;
+  border-bottom:1px solid var(--line);
+}
+.editor-stats b{color:var(--text-main);font-weight:800;font-variant-numeric:tabular-nums;}
+.es-sep{opacity:.5;}
+/* 保存状态靠右，保存成功后闪一下强调色 */
+.es-save{
+  margin-left:auto;
+  padding:.1rem .5rem;border-radius:20px;
+  background:var(--c2);border:1px solid transparent;
+  transition:background-color .25s ease,color .25s ease,border-color .25s ease;
+}
+.es-save.on{background:rgba(248,130,194,.14);border-color:var(--accent2);color:var(--accent);}
+
+/* ---- 目录预览 ----
+   导出时会自动生成目录，这里先把条目列出来，
+   标题写到重复或层级不对时当场就能发现 */
+.toc-preview{
+  margin-bottom:1.1rem;padding:.6rem .8rem;
+  background:var(--c2);border:1px solid var(--line);border-radius:12px;
+}
+.toc-preview summary{
+  display:flex;align-items:center;gap:.5rem;cursor:pointer;
+  font-size:.8rem;font-weight:700;color:var(--text-soft);
+  list-style:none;
+}
+.toc-preview summary::-webkit-details-marker{display:none;}
+.toc-preview summary::before{
+  content:'▸';color:var(--muted);font-size:.7rem;
+  transition:transform .2s ease;
+}
+.toc-preview[open] summary::before{transform:rotate(90deg);}
+.toc-preview summary b{
+  margin-left:auto;font-size:.7rem;font-weight:700;
+  color:var(--accent);background:var(--card-bg);
+  padding:.05rem .45rem;border-radius:10px;
+}
+.toc-list{display:flex;flex-direction:column;gap:.1rem;margin-top:.5rem;}
+.toc-list span{
+  font-size:.78rem;color:var(--text-soft);line-height:1.5;
+  padding:.2rem 0 .2rem .5rem;border-left:2px solid var(--line);
+}
+/* 三级标题缩进，和文章页目录一致 */
+.toc-list span.lv3{padding-left:1.2rem;font-size:.74rem;color:var(--muted);}
+.act-btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:5px;
+  padding:.5rem .9rem;border-radius:9px;cursor:pointer;
+  border:1px solid var(--line);background:var(--c1);color:var(--text-main);
+  font-family:inherit;font-size:.8rem;font-weight:700;
+  transition:background-color .2s,border-color .2s,color .2s,transform .2s,box-shadow .2s;
+}
+.act-btn:hover{border-color:var(--accent2);color:var(--accent2);}
+.act-btn:active{transform:scale(.95);}
+.act-btn.primary{
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff;border-color:transparent;box-shadow:0 .3rem .8rem rgba(248,130,194,.3);
+}
+.act-btn.primary:hover{color:#fff;transform:translateY(-1px);box-shadow:0 .45rem 1rem rgba(248,130,194,.42);}
+.act-btn svg{width:15px;height:15px;flex:0 0 15px;}
+
+/* ---- 工具栏（两套共用样式，靠 .active 切换显示）----
+   自身不需要 sticky，由外层 .editor-head 统一吸顶 */
+.toolbar{
+  display:none;align-items:center;gap:.3rem;flex-wrap:wrap;
+  padding:.55rem 1rem;background:var(--c2);border-bottom:1px solid var(--line);
+}
+.toolbar.active{display:flex;}
+.toolbar .sep{width:1px;height:18px;background:var(--line);margin:0 .25rem;}
+.tb-btn{
+  min-width:1.95rem;height:1.95rem;padding:0 .5rem;border-radius:7px;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;gap:4px;
+  background:none;border:1px solid transparent;color:var(--text-soft);
+  font-family:inherit;font-size:.82rem;font-weight:700;line-height:1;white-space:nowrap;
+  transition:background-color .18s,color .18s,transform .18s,border-color .18s;
+}
+.tb-btn:hover{background:var(--c3);color:var(--accent);}
+.tb-btn:active{transform:scale(.92);}
+.tb-btn svg{width:15px;height:15px;flex:0 0 15px;}
+/* 带文字标签的按钮（可视化工具栏用） */
+.tb-btn.text{font-size:.78rem;padding:0 .6rem;}
+/* 强调按钮：插入图片这种主要操作 */
+.tb-btn.accent{color:var(--accent);border-color:var(--line);background:var(--c1);}
+.tb-btn.accent:hover{border-color:var(--accent2);background:var(--c3);}
+.ico-b{font-weight:900;}
+.ico-i{font-style:italic;font-family:Georgia,serif;}
+
+/* ---- 字体颜色调色板 ----
+   父级 .toolbar 在窄屏是 overflow-x:auto，绝对定位的弹层会被裁掉，
+   所以用 fixed 并由 JS 按按钮位置定位 */
+.tb-wrap{display:inline-flex;}
+.tb-btn.tb-color .ico-a{
+  font-weight:900;
+  border-bottom:3px solid currentColor;
+  line-height:1;padding-bottom:1px;
+}
+.tb-btn.tb-color.on{background:var(--c3);color:var(--accent);}
+.color-pop{
+  display:none;position:fixed;z-index:60;
+  background:var(--card-bg);border:1px solid var(--line);
+  border-radius:12px;padding:.7rem;
+  box-shadow:0 .7rem 1.6rem rgba(0,0,0,.16);
+  width:13.5rem;
+}
+.color-pop.show{display:block;}
+.cp-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:.4rem;margin-bottom:.6rem;}
+.cp-dot{
+  width:100%;aspect-ratio:1;border:1px solid rgba(0,0,0,.12);
+  border-radius:7px;cursor:pointer;padding:0;
+  transition:transform .14s ease,box-shadow .14s ease;
+}
+.cp-dot:hover{transform:scale(1.14);box-shadow:0 .2rem .5rem rgba(0,0,0,.2);}
+.cp-custom{display:flex;align-items:center;gap:.4rem;margin-bottom:.5rem;}
+.cp-input{
+  width:2.4rem;height:1.9rem;padding:0;border:1px solid var(--line);
+  border-radius:6px;background:none;cursor:pointer;flex-shrink:0;
+}
+.cp-apply,.cp-clear{
+  height:1.9rem;padding:0 .6rem;border-radius:7px;cursor:pointer;
+  border:1px solid var(--line);background:var(--c1);
+  color:var(--text-soft);font-size:.76rem;font-family:inherit;
+  transition:background .18s ease,color .18s ease,border-color .18s ease;
+}
+.cp-apply{flex:1;}
+.cp-clear{width:100%;}
+.cp-apply:hover{background:var(--c3);color:var(--accent);border-color:var(--accent2);}
+.cp-clear:hover{background:var(--c3);color:var(--accent);}
+.ico-s{text-decoration:line-through;}
+
+/* ---- 面板 ---- */
+.editor-panes{position:relative;}
+.pane{display:none;}
+.pane.active{display:block;}
+
+/* Markdown 源码 */
+#mdInput{
+  display:block;width:100%;min-height:26rem;
+  padding:1.2rem;border:none;background:transparent;color:var(--card-text);
+  font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
+  font-size:.86rem;line-height:1.85;resize:vertical;
+}
+#mdInput:focus{outline:none;}
+
+/* 可视化面板 */
+.preview-wrap{padding:1.2rem;}
+.preview-hero{border:1px solid var(--line);border-radius:16px;overflow:hidden;margin-bottom:1.1rem;}
+.preview-cover{height:170px;background-size:cover;background-position:center;background-color:var(--c2);}
+.preview-cover.empty{display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.8rem;}
+.preview-heading{padding:1.1rem 1.2rem 1.2rem;}
+.preview-heading h1{font-size:clamp(1.25rem,2.6vw,1.7rem);line-height:1.35;color:var(--card-text);margin:.55rem 0;}
+.preview-heading .article-summary{font-size:.88rem;margin-bottom:.7rem;}
+.preview-heading .article-details{font-size:.76rem;padding-top:.7rem;}
+
+/* 可编辑正文：去掉卡片阴影避免嵌套两层卡片，聚焦时给出边框反馈 */
+.article-content.editable{
+  box-shadow:none;border:1px solid var(--line);min-height:18rem;
+  transition:border-color .2s,box-shadow .2s;
+}
+.article-content.editable:focus{
+  outline:none;border-color:var(--accent2);box-shadow:0 0 0 3px rgba(248,130,194,.12);
+}
+/* 内容为空时给出提示，contenteditable 没有原生 placeholder */
+.article-content.editable:empty::before,
+.article-content.editable > p:only-child:empty::before{
+  content:'在这里直接写正文，用上面的按钮排版…';
+  color:var(--muted);font-size:.9rem;
+}
+/* 编辑态下的图片：加轮廓便于选中和识别 */
+.article-content.editable img{
+  max-width:100%;height:auto;border-radius:10px;
+  outline:2px solid transparent;transition:outline-color .2s;
+}
+.article-content.editable img:hover{outline-color:var(--accent2);}
+
+/* ---- 导出结果 ---- */
+.export-box{
+  margin-top:1.2rem;background:var(--card-bg);border:1px solid var(--line);
+  border-radius:16px;padding:1.1rem;box-shadow:var(--card-shadow);display:none;
+}
+.export-box.show{display:block;}
+.export-box h3{font-size:.95rem;color:var(--text-main);margin-bottom:.5rem;}
+.export-box p{font-size:.8rem;color:var(--text-soft);line-height:1.7;margin-bottom:.7rem;}
+.export-box textarea{
+  width:100%;min-height:9rem;padding:.8rem;
+  background:var(--c2);color:var(--card-text);
+  border:1px solid var(--line);border-radius:10px;
+  font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
+  font-size:.76rem;line-height:1.6;resize:vertical;
+}
+.export-box .row{display:flex;gap:.5rem;margin-top:.7rem;flex-wrap:wrap;}
+
+/* 轻提示 */
+.toast{
+  position:fixed;left:50%;bottom:2rem;transform:translate(-50%,12px);
+  padding:.6rem 1.1rem;border-radius:24px;z-index:3000;max-width:calc(100vw - 2rem);
+  background:var(--card-bg);color:var(--card-text);
+  border:1px solid var(--line);box-shadow:0 .6rem 1.6rem rgba(51,58,92,.22);
+  font-size:.82rem;font-weight:700;text-align:center;
+  opacity:0;visibility:hidden;pointer-events:none;
+  transition:opacity .25s ease,transform .25s ease,visibility .25s;
+}
+.toast.show{opacity:1;visibility:visible;transform:translate(-50%,0);}
+
+@media(max-width:768px){
+  .editor-page{padding:4.5rem 1rem 2.5rem;}
+  .editor-fields{padding:1rem;gap:.8rem;}
+  .editor-tabs{padding:0 .6rem;flex-wrap:wrap;}
+  .tab-btn{padding:.75rem .7rem;font-size:.85rem;}
+  .tab-btn::after{left:.7rem;right:.7rem;}
+  .editor-actions{width:100%;margin-left:0;padding-bottom:.55rem;}
+  .editor-actions .act-btn{flex:1;}
+  /* 状态栏缩一点，别让吸顶头部在手机上占太多高度 */
+  .editor-stats{padding:.35rem .6rem .45rem;font-size:.7rem;}
+  .toc-preview{margin-bottom:.8rem;}
+  /* 窄屏工具栏按钮多、会换行，允许横向滚动而不是把头部撑得很高 */
+  .toolbar{padding:.5rem .6rem;gap:.25rem;flex-wrap:nowrap;overflow-x:auto;}
+  .toolbar::-webkit-scrollbar{height:0;}
+  .tb-btn{flex:0 0 auto;}
+  .tb-btn.text{font-size:.74rem;padding:0 .45rem;}
+  #mdInput{min-height:20rem;padding:.9rem;}
+  .preview-wrap{padding:.8rem;}
+  .preview-cover{height:130px;}
+  .article-content.editable{padding:1.1rem .9rem;}
+  .input-row{flex-direction:column;}
+}

@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>写文章 | xm486 の小屋</title>
+<meta name="description" content="可视化编写文章并导出静态 HTML">
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/png" sizes="32x32" href="image/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="image/favicon-16.png">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/editor.css">
+</head>
+<body>
+
+<nav id="nav">
+  <a href="index.html" class="logo">😽 <span>xm486</span>の小屋</a>
+  <div class="right">
+    <ul class="links" id="navLinks">
+      <li><a href="index.html#articles">文章</a></li>
+      <li><a href="posts/article-template.html">模板</a></li>
+    </ul>
+    <button id="themeToggle" title="切换日/夜模式" aria-label="切换主题">
+      <span class="ic sun">☀️</span><span class="ic moon">🌙</span>
+    </button>
+    <button class="menu-btn" id="menuBtn" aria-label="展开菜单">☰</button>
+  </div>
+</nav>
+
+<!-- 隐藏的文件选择器：由工具栏按钮触发 -->
+<input type="file" id="imagePick" accept="image/*" hidden>
+<input type="file" id="coverPick" accept="image/*" hidden>
+
+<main class="editor-page">
+  <div class="editor-shell">
+
+    <div class="editor-intro">
+      <b>写文章</b> · 上面填信息，下面写正文。
+      <b>可视化</b>和<b>Markdown</b>两个面板都能编辑，改哪边另一边都会跟着变。
+      写完点「生成 HTML」下载文件，放进 <code>posts/</code> 目录即可。内容自动存本地，关页面不丢。
+    </div>
+
+    <!-- 文章信息 -->
+    <div class="editor-fields">
+      <div class="field wide">
+        <label for="fTitle">标题</label>
+        <input type="text" id="fTitle" placeholder="例如：从零开始配置开发环境">
+      </div>
+
+      <div class="field">
+        <label for="fCategory">分类</label>
+        <select id="fCategory">
+          <option value="技术">技术</option>
+          <option value="生活">生活</option>
+          <option value="二次元">二次元</option>
+          <option value="个人汉化">个人汉化</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="fDate">发布日期</label>
+        <input type="date" id="fDate">
+      </div>
+
+      <div class="field">
+        <label for="fRead">阅读时长 <span class="hint">分钟</span></label>
+        <input type="number" id="fRead" min="1" max="120" placeholder="5">
+      </div>
+
+      <div class="field">
+        <label for="fSlug">文件名 <span class="hint">不含 .html，建议用英文</span></label>
+        <input type="text" id="fSlug" placeholder="my-first-post">
+      </div>
+
+      <div class="field wide">
+        <label for="fTags">标签 <span class="hint">用 · 分隔</span></label>
+        <input type="text" id="fTags" placeholder="TypeScript · 前端">
+      </div>
+
+      <div class="field wide">
+        <label for="fCover">封面图</label>
+        <div class="input-row">
+          <input type="text" id="fCover" placeholder="粘贴图片链接，或点右边选本地图片">
+          <button type="button" class="act-btn" onclick="document.getElementById('coverPick').click()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
+            </svg>
+            选图片
+          </button>
+        </div>
+      </div>
+
+      <div class="field wide">
+        <label for="fSummary">摘要 <span class="hint">首页卡片上显示的一段话</span></label>
+        <textarea id="fSummary" rows="2" placeholder="一两句话概括这篇文章讲了什么"></textarea>
+      </div>
+    </div>
+
+    <!-- 本地图片提醒 -->
+    <div class="img-notice" id="imgNotice"></div>
+
+    <!-- 编辑区 -->
+    <div class="editor-card">
+      <!-- 吸顶头部：标签栏与工具栏整体固定，写长文时不会滑走 -->
+      <div class="editor-head">
+      <div class="editor-tabs">
+        <button type="button" class="tab-btn active" data-pane="visual">可视化</button>
+        <button type="button" class="tab-btn" data-pane="markdown">Markdown</button>
+        <div class="editor-actions">
+          <button type="button" class="act-btn" id="btnImport">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/>
+            </svg>
+            导入
+          </button>
+          <input type="file" id="importPick" accept=".html,.htm,.md,.markdown,.txt" hidden>
+          <button type="button" class="act-btn" id="btnClear">清空</button>
+          <button type="button" class="act-btn primary" id="btnExport">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>
+            </svg>
+            生成 HTML
+          </button>
+        </div>
+      </div>
+
+      <!-- 可视化工具栏：文字标签，不用 H2 这种术语 -->
+      <div class="toolbar active" data-bar="visual">
+        <button type="button" class="tb-btn text" data-act="h2" title="大标题（会进目录）">大标题</button>
+        <button type="button" class="tb-btn text" data-act="h3" title="小标题">小标题</button>
+        <span class="sep"></span>
+        <button type="button" class="tb-btn" data-act="bold" title="加粗"><span class="ico-b">B</span></button>
+        <button type="button" class="tb-btn" data-act="italic" title="斜体"><span class="ico-i">I</span></button>
+        <button type="button" class="tb-btn" data-act="strike" title="删除线"><span class="ico-s">S</span></button>
+        <span class="tb-wrap">
+          <button type="button" class="tb-btn text tb-color" data-act="color" title="字体颜色">
+            <span class="ico-a">A</span>颜色
+          </button>
+        </span>
+        <span class="sep"></span>
+        <button type="button" class="tb-btn text" data-act="ul" title="圆点列表">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+          列表
+        </button>
+        <button type="button" class="tb-btn text" data-act="ol" title="数字列表">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 6h11M10 12h11M10 18h11M4 5h1v4M4 9h2M6 15.5A1.5 1.5 0 1 0 4.5 14M4 18h2.5"/></svg>
+          编号
+        </button>
+        <button type="button" class="tb-btn text" data-act="quote" title="引用块">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 5v14M9 8h11M9 12h11M9 16h7"/></svg>
+          引用
+        </button>
+        <span class="sep"></span>
+        <button type="button" class="tb-btn text" data-act="link" title="插入链接">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>
+          链接
+        </button>
+        <button type="button" class="tb-btn text accent" data-act="imageLocal" title="从本机选择图片">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+          插入图片
+        </button>
+        <button type="button" class="tb-btn text" data-act="imageLink" title="用图片链接插入">图片链接</button>
+        <span class="sep"></span>
+        <button type="button" class="tb-btn text" data-act="code" title="行内代码">代码</button>
+        <button type="button" class="tb-btn text" data-act="codeblock" title="多行代码块">代码块</button>
+        <button type="button" class="tb-btn" data-act="hr" title="分割线">—</button>
+        <button type="button" class="tb-btn text" data-act="clean" title="清除格式">清格式</button>
+      </div>
+
+      <!-- Markdown 工具栏：紧凑符号 -->
+      <div class="toolbar" data-bar="markdown">
+        <button type="button" class="tb-btn" data-act="h2" title="二级标题">H2</button>
+        <button type="button" class="tb-btn" data-act="h3" title="三级标题">H3</button>
+        <span class="sep"></span>
+        <button type="button" class="tb-btn" data-act="bold" title="粗体 Ctrl+B"><span class="ico-b">B</span></button>
+        <button type="button" class="tb-btn" data-act="italic" title="斜体 Ctrl+I"><span class="ico-i">I</span></button>
+        <button type="button" class="tb-btn" data-act="strike" title="删除线"><span class="ico-s">S</span></button>
+        <span class="tb-wrap">
+          <button type="button" class="tb-btn tb-color" data-act="color" title="字体颜色"><span class="ico-a">A</span></button>
+        </span>
+        <span class="sep"></span>
+        <button type="button" class="tb-btn" data-act="ul" title="无序列表">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+        </button>
+        <button type="button" class="tb-btn" data-act="ol" title="有序列表">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 6h11M10 12h11M10 18h11M4 5h1v4M4 9h2M6 15.5A1.5 1.5 0 1 0 4.5 14M4 18h2.5"/></svg>
+        </button>
+        <button type="button" class="tb-btn" data-act="quote" title="引用">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 5v14M9 8h11M9 12h11M9 16h7"/></svg>
+        </button>
+        <span class="sep"></span>
+        <button type="button" class="tb-btn" data-act="code" title="行内代码">&lt;/&gt;</button>
+        <button type="button" class="tb-btn" data-act="codeblock" title="代码块">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6l-5 6 5 6M16 6l5 6-5 6"/></svg>
+        </button>
+        <span class="sep"></span>
+        <button type="button" class="tb-btn" data-act="link" title="链接 Ctrl+K">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>
+        </button>
+        <button type="button" class="tb-btn accent" data-act="imageLocal" title="从本机选择图片">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+        </button>
+        <button type="button" class="tb-btn" data-act="imageLink" title="图片链接">🔗图</button>
+        <button type="button" class="tb-btn" data-act="hr" title="分割线">—</button>
+      </div>
+
+      <!-- 写作状态栏：字数、预估阅读时长、草稿保存状态。
+           放在吸顶头部里，写长文时也能一直看到 -->
+      <div class="editor-stats">
+        <span class="es-item"><b id="statWords">0</b> 字</span>
+        <span class="es-sep">·</span>
+        <span class="es-item">阅读约 <b id="statRead">1</b> 分钟</span>
+        <span class="es-save" id="statSave">自动保存</span>
+      </div>
+      </div><!-- /.editor-head -->
+
+      <div class="editor-panes">
+        <!-- 可视化：contenteditable 直接编辑 -->
+        <div class="pane active" data-pane="visual">
+          <div class="preview-wrap">
+            <header class="preview-hero" id="previewHero">
+              <div class="preview-cover empty">未设置封面图</div>
+              <div class="preview-heading">
+                <span class="article-category">技术</span>
+                <h1>未命名文章</h1>
+                <p class="article-summary">（这里显示文章摘要）</p>
+                <div class="article-details"></div>
+              </div>
+            </header>
+            <!-- 目录预览：导出时会自动生成，这里先照原样列出来，
+                 方便你确认标题层级对不对、有没有重复 -->
+            <details class="toc-preview" id="tocPreview" hidden>
+              <summary><span>目录预览</span><b id="tocCount">0 条</b></summary>
+              <div class="toc-list" id="tocList"></div>
+            </details>
+            <article class="article-content editable" id="visualBody"
+                     contenteditable="true" spellcheck="false"
+                     aria-label="文章正文，可直接编辑"></article>
+          </div>
+        </div>
+
+        <!-- Markdown 源码 -->
+        <div class="pane" data-pane="markdown">
+          <textarea id="mdInput" spellcheck="false" placeholder="在此输入正文，支持 Markdown 语法…"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- 导出结果 -->
+    <div class="export-box" id="exportBox">
+      <h3>① 文章页面</h3>
+      <p>点「下载文件」保存后放进 <code>posts/</code> 目录即可访问。</p>
+      <textarea id="exportCode" spellcheck="false" readonly></textarea>
+      <div class="row">
+        <button type="button" class="act-btn primary" id="btnDownload">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/>
+          </svg>
+          下载文件
+        </button>
+        <button type="button" class="act-btn" id="btnCopyHTML">复制 HTML</button>
+      </div>
+
+      <h3 style="margin-top:1.4rem;">② 首页卡片</h3>
+      <p>粘贴到 <code>index.html</code> 里 <code>&lt;div class="articles-grid"&gt;</code> 内部，文章就会出现在首页列表。</p>
+      <textarea id="cardCode" spellcheck="false" readonly style="min-height:7rem;"></textarea>
+      <div class="row">
+        <button type="button" class="act-btn" id="btnCopyCard">复制卡片代码</button>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/main.js"></script>
+<script src="js/editor.js"></script>
+</body>
+</html>

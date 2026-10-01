@@ -1,0 +1,203 @@
+/* ================================================================
+   评论与评价组件样式
+   布局参照 CyanTea's blog：竖排字段、标签在上输入框在下、
+   打分独立灰底区块、按钮右对齐。配色用本站主题变量，日夜自动适配。
+   类名统一 wc- 前缀，避免与第三方样式冲突。
+   ================================================================ */
+.article-comments{grid-column:1;margin-top:1.5rem;}
+.article-comments:empty{display:none;}
+
+/* 首页评论区：在 main 之外，必须自带背景色，
+   否则会透出 #imgs 那层 fixed 背景轮播图。与 #contact / footer 同色连成一片，
+   同色相接时没有边界感，靠 padding-top 与上方的「联系我」拉开距离 */
+.index-comments{
+  background:var(--content-lo);
+  padding:2.5rem 1.5rem 3rem;
+}
+.index-comments>div{max-width:1120px;margin:0 auto;}
+/* 与「联系我」同底色，纯留白仍缺分隔感，加一条居中渐隐细线 */
+.index-comments::before{
+  content:'';display:block;
+  max-width:1120px;height:1px;margin:0 auto 2.2rem;
+  background:linear-gradient(90deg,transparent,var(--line) 25%,var(--line) 75%,transparent);
+}
+
+/* ---- 外层 ---- */
+.wc-box{color:var(--card-text);}
+
+/* ---- 标题行：图标 + 标题 + 条数徽标 ---- */
+.wc-head{display:flex;align-items:center;gap:.6rem;margin-bottom:1rem;flex-wrap:wrap;}
+.wc-ico{
+  width:2rem;height:2rem;flex-shrink:0;border-radius:10px;
+  background:var(--accent);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+}
+.wc-ico svg{width:1.1rem;height:1.1rem;}
+.wc-h2{font-size:1.25rem;font-weight:800;color:var(--text-main);margin:0;line-height:1.3;}
+.wc-count-badge{
+  margin-left:auto;font-size:.76rem;color:var(--text-soft);
+  background:var(--content-lo);border:1px solid var(--line);
+  padding:.25rem .8rem;border-radius:20px;white-space:nowrap;
+}
+
+/* ---- 最新 / 最热 ---- */
+.wc-sorts{display:flex;gap:.5rem;margin-bottom:1rem;}
+.wc-sort{
+  border:none;cursor:pointer;font-size:.85rem;font-weight:600;
+  padding:.42rem 1.15rem;border-radius:20px;
+  background:transparent;color:var(--text-soft);
+  transition:background .2s ease,color .2s ease;
+}
+.wc-sort:hover{color:var(--accent2);}
+.wc-sort.active{background:var(--accent);color:#fff;}
+
+/* ---- 均分（有人打分才出现） ---- */
+.wc-avg{
+  display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;
+  background:var(--content-lo);border:1px solid var(--line);
+  border-radius:14px;padding:.7rem 1rem;margin-bottom:1rem;
+}
+.wc-avg-num{font-size:1.5rem;font-weight:800;color:var(--accent);line-height:1;font-variant-numeric:tabular-nums;}
+.wc-avg-stars{font-size:.95rem;letter-spacing:.06em;}
+
+/* ---- 表单卡片 ---- */
+.wc-card-panel{
+  background:var(--card-bg);border:1px solid var(--line);
+  border-radius:18px;padding:1.4rem 1.5rem;
+  box-shadow:var(--card-shadow);margin-bottom:1.4rem;
+}
+.wc-field{margin-bottom:1rem;}
+.wc-label{
+  display:block;font-size:.86rem;font-weight:700;
+  color:var(--text-main);margin-bottom:.45rem;
+}
+.wc-label b{color:var(--accent);font-weight:700;}
+.wc-note{font-weight:400;font-size:.78rem;color:var(--muted);font-style:italic;}
+
+.wc-input,.wc-textarea{
+  display:block;width:100%;box-sizing:border-box;
+  background:var(--content-lo);border:1px solid transparent;
+  border-radius:12px;padding:.75rem .9rem;
+  font-size:.9rem;font-family:inherit;color:var(--card-text);
+  outline:none;transition:border-color .18s ease,background .18s ease,box-shadow .18s ease;
+}
+.wc-input::placeholder,.wc-textarea::placeholder{color:var(--muted);}
+.wc-input:focus,.wc-textarea:focus{
+  background:var(--card-bg);border-color:var(--accent);
+  box-shadow:0 0 0 3px rgba(247,130,194,.16);
+}
+.wc-textarea{resize:vertical;line-height:1.65;min-height:5.5rem;}
+
+/* ---- 打分区块 ---- */
+.wc-rate-block{
+  background:var(--content-lo);border:1px solid var(--line);
+  border-radius:12px;padding:.85rem 1rem;margin-bottom:1rem;
+}
+.wc-rate-title{font-size:.86rem;font-weight:700;color:var(--text-main);margin-bottom:.55rem;}
+/* 星星与提示文字分成两行。
+   原先它们同在一个 flex-wrap:wrap 容器里：五颗星 5×44=220px 加上提示文字，
+   窄屏会挤压换行，而提示文字长度在每次点选后都会变
+   （「未选中打分，发表普通评论」↔「3 分，还不错」），
+   换行位置随之跳动，第 3、4 颗星正好落在临界点上 ——
+   表现就是同一颗星有时点得到有时点不到。 */
+.wc-rate-row{
+  display:flex;align-items:center;gap:0;
+  flex-wrap:nowrap;          /* 星星绝不换行，位置恒定 */
+  width:max-content;         /* 只占五颗星的宽度，不被容器拉伸 */
+  max-width:100%;
+}
+/* 星星的点击区：字符本身只有 ~22px 宽，手指很容易点到缝隙里。
+   撑到 44×44（无障碍推荐的最小触摸目标），
+   gap 设为 0 让相邻星星的判定区紧密相接，中间不留死区。 */
+.wc-rate-row span[data-star]{
+  font-size:1.6rem;line-height:1;cursor:pointer;color:var(--muted);
+  width:44px;height:44px;flex:0 0 44px;   /* 固定尺寸，不被 flex 压缩 */
+  display:inline-flex;align-items:center;justify-content:center;
+  transition:transform .12s ease,color .12s ease;
+  user-select:none;-webkit-user-select:none;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+  border-radius:8px;
+}
+.wc-rate-row span[data-star]:hover{transform:scale(1.18);}
+.wc-rate-row span[data-star]:active{transform:scale(.94);}
+/* 键盘操作时给出可见焦点，纯 span 默认没有 */
+.wc-rate-row span[data-star]:focus-visible{outline:2px solid var(--accent);outline-offset:-4px;}
+.wc-rate-row span[data-star].on{color:#ffb800;}
+/* 提示独立成行：文字变长变短都不会影响星星的位置 */
+.wc-rate-tip{
+  display:block;margin-top:.3rem;
+  font-size:.78rem;color:var(--muted);font-style:italic;
+  min-height:1.2em;          /* 预留一行高度，切换文案时不抖动 */
+}
+
+/* ---- 提交行：按钮右对齐 ---- */
+.wc-actions{display:flex;align-items:center;justify-content:flex-end;gap:.8rem;flex-wrap:wrap;}
+.wc-msg{font-size:.8rem;color:var(--accent2);margin-right:auto;}
+.wc-msg.err{color:#e05353;}
+.wc-btn{
+  display:inline-flex;align-items:center;gap:.4rem;
+  background:var(--accent);color:#fff;border:none;border-radius:12px;
+  padding:.7rem 1.6rem;font-size:.88rem;font-weight:700;cursor:pointer;
+  transition:background .2s ease,transform .2s ease,box-shadow .2s ease;
+}
+.wc-btn svg{width:1rem;height:1rem;}
+.wc-btn:hover{background:var(--accent2);transform:translateY(-2px);box-shadow:0 .5rem 1.1rem rgba(248,130,194,.32);}
+.wc-btn:disabled{opacity:.55;cursor:wait;transform:none;box-shadow:none;}
+.wc-btn.sm{padding:.5rem 1.1rem;font-size:.8rem;}
+.wc-btn.ghost{background:transparent;color:var(--text-soft);border:1px solid var(--line);}
+.wc-btn.ghost:hover{background:var(--content-lo);color:var(--card-text);transform:none;box-shadow:none;}
+
+/* ---- 评论列表 ---- */
+.wc-list{display:flex;flex-direction:column;gap:.9rem;}
+.wc-empty,.wc-tip{
+  text-align:center;padding:2.2rem 1rem;color:var(--muted);font-size:.86rem;
+  background:var(--card-bg);border:1px dashed var(--line);border-radius:16px;
+}
+.wc-tip{color:#e05353;border-style:solid;}
+
+.wc-item{
+  background:var(--card-bg);border:1px solid var(--line);
+  border-radius:16px;padding:1rem 1.15rem;box-shadow:var(--card-shadow);
+}
+.wc-item-head{display:flex;align-items:center;gap:.7rem;margin-bottom:.6rem;}
+.wc-avatar{width:2.2rem;height:2.2rem;border-radius:10px;flex-shrink:0;}
+.wc-who{display:flex;flex-direction:column;line-height:1.35;min-width:0;}
+.wc-nick{font-size:.9rem;font-weight:700;color:var(--text-main);}
+.wc-time{font-size:.72rem;color:var(--muted);}
+.wc-item-rate{margin-left:auto;font-size:.85rem;letter-spacing:.05em;flex-shrink:0;}
+.wc-star{color:var(--muted);}
+.wc-star.on{color:#ffb800;}
+.wc-text{font-size:.9rem;line-height:1.75;color:var(--card-text);word-break:break-word;white-space:pre-wrap;margin-bottom:.6rem;}
+.wc-item-foot{display:flex;gap:1.1rem;}
+.wc-act{
+  background:none;border:none;cursor:pointer;color:var(--muted);
+  font-size:.78rem;font-weight:600;padding:0;
+  display:inline-flex;align-items:center;gap:.25rem;
+  transition:color .15s ease;
+}
+.wc-act:hover{color:var(--accent2);}
+
+/* ---- 楼中楼 ---- */
+.wc-replies{margin-top:.8rem;padding-left:.95rem;border-left:2px solid var(--accent);display:flex;flex-direction:column;gap:.65rem;}
+.wc-reply{background:var(--content-lo);border:1px solid var(--line);border-radius:12px;padding:.75rem .9rem;}
+.wc-reply .wc-text{font-size:.84rem;margin-bottom:.45rem;}
+.wc-reply .wc-nick{font-size:.84rem;}
+.wc-reply .wc-avatar{width:1.8rem;height:1.8rem;border-radius:8px;}
+.wc-reply-form{
+  display:flex;flex-direction:column;gap:.55rem;margin-top:.8rem;
+  padding:.85rem;background:var(--content-lo);
+  border:1px dashed var(--accent);border-radius:12px;
+}
+.wc-reply-form .wc-input,.wc-reply-form .wc-textarea{background:var(--card-bg);font-size:.82rem;padding:.55rem .7rem;}
+
+/* ---- 窄屏 ---- */
+@media(max-width:600px){
+  .index-comments{padding:1.8rem 1rem 2.5rem;}
+  .index-comments::before{margin-bottom:1.6rem;}
+  .wc-card-panel{padding:1.1rem 1rem;border-radius:16px;}
+  .wc-h2{font-size:1.1rem;}
+  .wc-rate-row span[data-star]{font-size:1.45rem;}
+  .wc-rate-tip{margin-left:0;flex-basis:100%;}
+  .wc-btn{width:100%;justify-content:center;}
+  .wc-msg{margin-right:0;flex-basis:100%;text-align:center;}
+}
